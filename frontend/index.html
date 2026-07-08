@@ -429,9 +429,10 @@ ownerAddress = await contract.owner();
         showToast("✅ Wallet connected!", "success");
         await loadPetitions();
         await loadStats();
-      } catch (err) {
-        showToast("❌ " + (err.message || "Connection failed"), "error");
-      }
+} catch (err) {
+  console.error("FULL ERROR:", err);
+  showToast("❌ " + (err.message || "Connection failed"), "error");
+}
     }
 
     async function switchToBaseSepolia() {
