@@ -411,7 +411,10 @@
         await switchToBaseSepolia();
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         walletAddress = accounts[0];
-        provider = new ethers.BrowserProvider(window.ethereum);
+        provider = new ethers.BrowserProvider(window.ethereum, {
+  name: "base-sepolia",
+  chainId: 84532
+});
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         ownerAddress = await contract.owner();
