@@ -413,11 +413,12 @@
         walletAddress = accounts[0];
         provider = new ethers.BrowserProvider(window.ethereum, {
   name: "base-sepolia",
-  chainId: 84532
+  chainId: 84532,
+  ensAddress: null
 });
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        ownerAddress = await contract.owner();
+signer = await provider.getSigner();
+contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+ownerAddress = await contract.owner();
 
         document.getElementById("walletAddress").textContent = short(walletAddress);
         document.getElementById("statusDot").classList.add("on");
