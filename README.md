@@ -1,5 +1,7 @@
 # PetitionBase 📜
 
+🔗 **Live App:** https://danialzz.github.io/petition-dapp/
+
 A decentralized petition platform on **Base network**. Anyone can create and sign petitions. The platform owner can moderate petitions that violate the rules.
 
 ## Features
