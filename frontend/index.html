@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PetitionBase — Decentralized Petitions</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230052FF'/%3E%3C/svg%3E" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,6 +51,10 @@
     .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .main { width: 100%; max-width: 900px; padding: 0 20px; }
     .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-bar input[type="text"] { flex: 2; min-width: 180px; }
+    .filter-bar select { flex: 1; min-width: 130px; }
+    @media (max-width: 700px) { .filter-bar { flex-direction: column; } .filter-bar input, .filter-bar select { width: 100%; } }
     .tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 9px; cursor: pointer; color: var(--muted); transition: all 0.2s; border: none; background: none; font-family: var(--sans); }
     .tab.active { background: var(--blue); color: #fff; }
     .tab:hover:not(.active) { color: var(--text); }
@@ -153,6 +158,24 @@
     </div>
 
     <div id="tab-browse">
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search petitions by title..." oninput="applyFilters()" />
+        <select id="categoryFilter" onchange="applyFilters()">
+          <option value="">All Categories</option>
+          <option>Environment</option><option>Human Rights</option><option>Animal Welfare</option>
+          <option>Education</option><option>Healthcare</option><option>Politics</option>
+          <option>Technology</option><option>Community</option><option>Other</option>
+        </select>
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="">All Statuses</option>
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select id="sortFilter" onchange="applyFilters()">
+          <option value="newest">Newest First</option>
+          <option value="mostSigned">Most Signed</option>
+        </select>
+      </div>
       <div id="petitionList"><div class="loading-state">Connect your wallet to load petitions.</div></div>
     </div>
 
@@ -231,6 +254,7 @@
     let ownerAddress = null;
     let removePetitionId = null;
     let currentTab = "browse";
+    let allPetitionsCache = [];
 
     async function loadPetitions() {
       const list = document.getElementById("petitionList");
@@ -238,20 +262,56 @@
       try {
         const total = Number(await contract.getTotalPetitions());
         if (total === 0) {
+          allPetitionsCache = [];
           list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first to create one!</p></div>';
           return;
         }
-        const now = Math.floor(Date.now() / 1000);
         const petitions = [];
         for (let i = total; i >= 1; i--) {
           const p = await contract.getPetition(i);
           const signed = await contract.hasWalletSigned(i, walletAddress);
           petitions.push({ ...p, signed });
         }
-        list.innerHTML = petitions.map(p => renderPetition(p, now)).join("");
+        allPetitionsCache = petitions;
+        applyFilters();
       } catch (err) {
         list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Failed to load</h3><p>${err.message}</p></div>`;
       }
+    }
+
+    function applyFilters() {
+      const list = document.getElementById("petitionList");
+      const searchInput = document.getElementById("searchInput");
+      const categoryFilter = document.getElementById("categoryFilter");
+      const statusFilter = document.getElementById("statusFilter");
+      const sortFilter = document.getElementById("sortFilter");
+      if (!searchInput) return; // filter bar not in DOM yet
+
+      const search = searchInput.value.trim().toLowerCase();
+      const category = categoryFilter.value;
+      const status = statusFilter.value;
+      const sort = sortFilter.value;
+      const now = Math.floor(Date.now() / 1000);
+
+      let filtered = allPetitionsCache.filter(p => {
+        if (search && !p.title.toLowerCase().includes(search)) return false;
+        if (category && p.category !== category) return false;
+        if (status === "open" && !(p.active && Number(p.deadline) > now)) return false;
+        if (status === "closed" && (p.active && Number(p.deadline) > now)) return false;
+        return true;
+      });
+
+      if (sort === "mostSigned") {
+        filtered = [...filtered].sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount));
+      }
+      // "newest" is already the natural order from loadPetitions (highest id first)
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>Try a different search or filter.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(p => renderPetition(p, now)).join("");
     }
 
     function renderPetition(p, now) {
@@ -472,6 +532,7 @@
       document.getElementById("petitionList").innerHTML = '<div class="loading-state">Connect your wallet to load petitions.</div>';
       document.getElementById("statTotal").textContent = "—";
       document.getElementById("statActive").textContent = "—";
+      allPetitionsCache = [];
 
       showToast("👋 Wallet disconnected", "");
     }
