@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 /// @title PetitionPlatform
 /// @notice A decentralized petition platform on Base network.
 ///         Anyone can create a petition. Anyone can sign open petitions.
-///         The platform owner can remove petitions that violate rules.
+///         The platform owner can remove ANY petition that violates rules.
+///         A petition's creator can also remove their OWN petition at any time.
 contract PetitionPlatform {
 
     // ─────────────────────────────────────────
@@ -19,7 +20,7 @@ contract PetitionPlatform {
         string category;
         uint256 deadline;       // Unix timestamp when signing closes
         uint256 signatureCount;
-        bool active;            // false = removed by owner
+        bool active;            // false = removed (by owner or creator)
         uint256 createdAt;
     }
 
@@ -155,16 +156,21 @@ contract PetitionPlatform {
         emit PetitionSigned(_id, msg.sender, petitions[_id].signatureCount);
     }
 
-    /// @notice Remove a petition that violates platform rules (owner only)
+    /// @notice Remove a petition. Callable by the platform owner (any petition,
+    ///         e.g. for rule violations) OR by the petition's own creator
+    ///         (their own petition only, e.g. they no longer want it listed).
     /// @param _id The petition ID to remove
     /// @param _reason The reason for removal
     function removePetition(uint256 _id, string calldata _reason)
         external
-        onlyOwner
         petitionExists(_id)
     {
         require(petitions[_id].active, "Petition already removed");
         require(bytes(_reason).length > 0, "Must provide a reason");
+        require(
+            msg.sender == owner || msg.sender == petitions[_id].creator,
+            "Only the platform owner or the petition's creator can remove it"
+        );
 
         petitions[_id].active = false;
         emit PetitionRemoved(_id, msg.sender, _reason);
