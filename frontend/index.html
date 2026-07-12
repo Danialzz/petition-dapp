@@ -176,7 +176,7 @@
           <option value="mostSigned">Most Signed</option>
         </select>
       </div>
-      <div id="petitionList"><div class="loading-state">Connect your wallet to load petitions.</div></div>
+      <div id="petitionList"><div class="loading-state"><span class="spinner"></span> Loading petitions...</div></div>
     </div>
 
     <div id="tab-create" style="display:none">
@@ -250,17 +250,28 @@
     ];
 
     let provider, signer, contract;
+    let readOnlyProvider, readContract;
     let walletAddress = null;
     let ownerAddress = null;
     let removePetitionId = null;
     let currentTab = "browse";
     let allPetitionsCache = [];
 
+    // Read-only connection to Base Sepolia's public RPC — lets anyone browse
+    // petitions without connecting a wallet. Only signing/creating/removing
+    // requires an actual connected wallet (see connectWithWallet()).
+    function initReadOnlyContract() {
+      readOnlyProvider = new ethers.JsonRpcProvider("https://sepolia.base.org");
+      readContract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, readOnlyProvider);
+    }
+    initReadOnlyContract();
+
     async function loadPetitions() {
       const list = document.getElementById("petitionList");
       list.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading petitions...</div>';
       try {
-        const total = Number(await contract.getTotalPetitions());
+        const activeContract = contract || readContract;
+        const total = Number(await activeContract.getTotalPetitions());
         if (total === 0) {
           allPetitionsCache = [];
           list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first to create one!</p></div>';
@@ -268,8 +279,8 @@
         }
         const petitions = [];
         for (let i = total; i >= 1; i--) {
-          const raw = await contract.getPetition(i);
-          const signed = await contract.hasWalletSigned(i, walletAddress);
+          const raw = await activeContract.getPetition(i);
+          const signed = walletAddress ? await activeContract.hasWalletSigned(i, walletAddress) : false;
           petitions.push({
             id: raw.id,
             creator: raw.creator,
@@ -400,6 +411,11 @@
     }
 
     async function signPetition(id) {
+      if (!contract || !walletAddress) {
+        showToast("🔗 Connect a wallet first to sign this petition.", "");
+        openWalletModal();
+        return;
+      }
       const btn = document.querySelector(`#petition-${id} .btn-sign`);
       if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
       try {
@@ -442,12 +458,13 @@
 
     async function loadStats() {
       try {
-        const total = Number(await contract.getTotalPetitions());
+        const activeContract = contract || readContract;
+        const total = Number(await activeContract.getTotalPetitions());
         document.getElementById("statTotal").textContent = total;
         const now = Math.floor(Date.now() / 1000);
         let active = 0;
         for (let i = 1; i <= total; i++) {
-          const p = await contract.getPetition(i);
+          const p = await activeContract.getPetition(i);
           if (p.active && Number(p.deadline) > now) active++;
         }
         document.getElementById("statActive").textContent = active;
@@ -540,12 +557,11 @@
       document.getElementById("connectBtn").disabled = false;
       document.getElementById("createBtn").disabled = true;
 
-      document.getElementById("petitionList").innerHTML = '<div class="loading-state">Connect your wallet to load petitions.</div>';
-      document.getElementById("statTotal").textContent = "—";
-      document.getElementById("statActive").textContent = "—";
-      allPetitionsCache = [];
-
       showToast("👋 Wallet disconnected", "");
+
+      // Petitions remain visible in read-only mode — only actions (sign/create/remove) need a wallet.
+      loadPetitions();
+      loadStats();
     }
 
     function updateCount(inputId, countId, max) {
@@ -721,6 +737,10 @@
         renderWalletList();
       }
     }, 600);
+
+    // Anyone can browse petitions without connecting a wallet.
+    loadPetitions();
+    loadStats();
   </script>
 </body>
 </html>
