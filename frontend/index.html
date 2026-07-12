@@ -268,9 +268,20 @@
         }
         const petitions = [];
         for (let i = total; i >= 1; i--) {
-          const p = await contract.getPetition(i);
+          const raw = await contract.getPetition(i);
           const signed = await contract.hasWalletSigned(i, walletAddress);
-          petitions.push({ ...p, signed });
+          petitions.push({
+            id: raw.id,
+            creator: raw.creator,
+            title: raw.title,
+            description: raw.description,
+            category: raw.category,
+            deadline: raw.deadline,
+            signatureCount: raw.signatureCount,
+            active: raw.active,
+            createdAt: raw.createdAt,
+            signed
+          });
         }
         allPetitionsCache = petitions;
         applyFilters();
