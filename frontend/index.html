@@ -179,6 +179,8 @@
 
   <div id="toast"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
   <script>
     const CONTRACT_ADDRESS = "0xfBb8D6e2494F55bC2DD13f971c2efc8351a1c2cE";
     const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
@@ -382,123 +384,160 @@
       toastTimer = setTimeout(() => { el.className = ""; }, 4500);
     }
 
-    // Placeholder until AppKit module below initializes; avoids "not defined" errors on early clicks
-    window.openWalletModal = function () {
-      showToast("⏳ Wallet modal is still loading, try again in a second...", "");
-    };
-  </script>
+    // ─────────────────────────────────────────
+    // Custom wallet picker (EIP-6963 + fallback)
+    // ─────────────────────────────────────────
+    const detectedWallets = new Map(); // uuid -> { info, provider }
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    // Modern wallets (MetaMask, Rabby, Zerion, Coinbase, etc.) announce themselves
+    // via this browser event instead of all fighting over window.ethereum.
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      const { info, provider } = event.detail;
+      detectedWallets.set(info.uuid, { info, provider });
+      renderWalletList();
+    });
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-  <script type="module">
-    import { createAppKit } from 'https://esm.sh/@reown/appkit@1.7.4?bundle';
-    import { EthersAdapter } from 'https://esm.sh/@reown/appkit-adapter-ethers@1.7.4?bundle';
-
-    const REOWN_PROJECT_ID = "53ae1c1db35129fa00631b4b986848b2";
-
-    const baseSepoliaNetwork = {
-      id: 84532,
-      chainNamespace: "eip155",
-      caipNetworkId: "eip155:84532",
-      name: "Base Sepolia",
-      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-      rpcUrls: { default: { http: ["https://sepolia.base.org"] } },
-      blockExplorers: { default: { name: "Basescan", url: "https://sepolia.basescan.org" } },
-      testnet: true
-    };
-
-    const appKitMetadata = {
-      name: "PetitionBase",
-      description: "Decentralized petition platform on Base",
-      url: window.location.origin,
-      icons: ["https://avatars.githubusercontent.com/u/179229932"]
-    };
-
-    try {
-      const appKitModal = createAppKit({
-        adapters: [new EthersAdapter()],
-        networks: [baseSepoliaNetwork],
-        metadata: appKitMetadata,
-        projectId: REOWN_PROJECT_ID,
-        features: { analytics: false, email: false, socials: [] },
-        themeMode: "dark"
-      });
-      window.appKitModal = appKitModal;
-      console.log("AppKit initialized successfully");
-
-      window.openWalletModal = function () {
-        appKitModal.open();
-      };
-
-      appKitModal.subscribeAccount(async (account) => {
-        if (account?.isConnected && account?.address) {
-          try {
-            const eip1193Provider = appKitModal.getWalletProvider();
-            if (!eip1193Provider) return;
-
-            provider = new ethers.BrowserProvider(eip1193Provider);
-            signer = await provider.getSigner();
-            walletAddress = account.address;
-            contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
-            ownerAddress = await contract.owner();
-
-            document.getElementById("walletAddress").textContent = short(walletAddress);
-            document.getElementById("statusDot").classList.add("on");
-            document.getElementById("connectBtn").textContent = "Connected";
-            document.getElementById("createBtn").disabled = false;
-
-            showToast("✅ Wallet connected!", "success");
-            await loadPetitions();
-            await loadStats();
-
-            // Only attempt a network switch AFTER everything else has succeeded,
-            // and never block the connection flow on it.
-            try {
-              const network = await provider.getNetwork();
-              if (Number(network.chainId) !== 84532) {
-                await eip1193Provider.request({
-                  method: "wallet_switchEthereumChain",
-                  params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }]
-                });
-              }
-            } catch (switchErr) {
-              if (switchErr.code === 4902) {
-                try {
-                  await eip1193Provider.request({
-                    method: "wallet_addEthereumChain",
-                    params: [{
-                      chainId: BASE_SEPOLIA_CHAIN_ID,
-                      chainName: "Base Sepolia Testnet",
-                      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-                      rpcUrls: ["https://sepolia.base.org"],
-                      blockExplorerUrls: ["https://sepolia.basescan.org"]
-                    }]
-                  });
-                } catch (addErr) {
-                  console.warn("Could not add Base Sepolia automatically:", addErr);
-                }
-              } else {
-                console.warn("Could not switch network automatically:", switchErr);
-              }
-            }
-          } catch (err) {
-            console.error("Post-connect setup failed:", err);
-            showToast("❌ " + (err.message || "Connection setup failed"), "error");
-          }
-        } else {
-          walletAddress = null;
-          document.getElementById("walletAddress").textContent = "Not connected";
-          document.getElementById("statusDot").classList.remove("on");
-          document.getElementById("connectBtn").textContent = "Connect Wallet";
-          document.getElementById("createBtn").disabled = true;
-        }
-      });
-    } catch (e) {
-      console.error("AppKit failed to initialize:", e);
-      window.openWalletModal = function () {
-        showToast("❌ Wallet modal failed to load. Check console for details.", "error");
-      };
+    function buildWalletModal() {
+      if (document.getElementById("walletPickerOverlay")) return;
+      const overlay = document.createElement("div");
+      overlay.id = "walletPickerOverlay";
+      overlay.className = "modal-overlay";
+      overlay.innerHTML = `
+        <div class="modal">
+          <h3>🔗 Connect a Wallet</h3>
+          <p>Choose a wallet to connect to PetitionBase.</p>
+          <div id="walletPickerList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
+          <button class="btn-cancel" onclick="closeWalletModal()">Cancel</button>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) closeWalletModal(); });
     }
+
+    function renderWalletList() {
+      const listEl = document.getElementById("walletPickerList");
+      if (!listEl) return;
+
+      if (detectedWallets.size === 0) {
+        listEl.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding:12px 0;">
+          No wallet extensions detected. Install MetaMask, Coinbase Wallet, or another browser wallet to continue.
+        </div>`;
+        return;
+      }
+
+      listEl.innerHTML = "";
+      for (const { info } of detectedWallets.values()) {
+        const btn = document.createElement("button");
+        btn.className = "btn-secondary";
+        btn.style.cssText = "display:flex; align-items:center; gap:10px; width:100%; padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;";
+        btn.innerHTML = `<img src="${info.icon}" width="24" height="24" style="border-radius:6px;" /> ${escHtml(info.name)}`;
+        btn.onclick = () => connectWithWallet(info.uuid);
+        listEl.appendChild(btn);
+      }
+    }
+
+    window.openWalletModal = function () {
+      buildWalletModal();
+      renderWalletList();
+      document.getElementById("walletPickerOverlay").classList.add("show");
+    };
+
+    window.closeWalletModal = function () {
+      const overlay = document.getElementById("walletPickerOverlay");
+      if (overlay) overlay.classList.remove("show");
+    };
+
+    async function connectWithWallet(uuid) {
+      const entry = detectedWallets.get(uuid);
+      if (!entry) return;
+      const eip1193Provider = entry.provider;
+
+      closeWalletModal();
+
+      try {
+        const accounts = await eip1193Provider.request({ method: "eth_requestAccounts" });
+        if (!accounts || accounts.length === 0) {
+          showToast("❌ No account returned. Try again.", "error");
+          return;
+        }
+
+        provider = new ethers.BrowserProvider(eip1193Provider);
+        signer = await provider.getSigner();
+        walletAddress = accounts[0];
+        contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
+        ownerAddress = await contract.owner();
+
+        document.getElementById("walletAddress").textContent = short(walletAddress);
+        document.getElementById("statusDot").classList.add("on");
+        document.getElementById("connectBtn").textContent = "Connected";
+        document.getElementById("createBtn").disabled = false;
+
+        showToast("✅ Wallet connected!", "success");
+        await loadPetitions();
+        await loadStats();
+
+        // Switch network only after everything above has succeeded.
+        try {
+          const network = await provider.getNetwork();
+          if (Number(network.chainId) !== 84532) {
+            await eip1193Provider.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }]
+            });
+          }
+        } catch (switchErr) {
+          if (switchErr.code === 4902) {
+            try {
+              await eip1193Provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: BASE_SEPOLIA_CHAIN_ID,
+                  chainName: "Base Sepolia Testnet",
+                  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+                  rpcUrls: ["https://sepolia.base.org"],
+                  blockExplorerUrls: ["https://sepolia.basescan.org"]
+                }]
+              });
+            } catch (addErr) {
+              console.warn("Could not add Base Sepolia automatically:", addErr);
+            }
+          } else {
+            console.warn("Could not switch network automatically:", switchErr);
+          }
+        }
+
+        // Keep UI state in sync if the user changes accounts or disconnects in their wallet.
+        eip1193Provider.on?.("accountsChanged", (accs) => {
+          if (!accs || accs.length === 0) {
+            walletAddress = null;
+            document.getElementById("walletAddress").textContent = "Not connected";
+            document.getElementById("statusDot").classList.remove("on");
+            document.getElementById("connectBtn").textContent = "Connect Wallet";
+            document.getElementById("createBtn").disabled = true;
+          } else {
+            walletAddress = accs[0];
+            document.getElementById("walletAddress").textContent = short(walletAddress);
+            loadPetitions();
+            loadStats();
+          }
+        });
+      } catch (err) {
+        console.error("Connection failed:", err);
+        showToast("❌ " + (err.message || "Connection failed"), "error");
+      }
+    }
+
+    // Fallback: if no EIP-6963 wallets ever announce (older wallet versions),
+    // offer a plain window.ethereum connect after a short grace period.
+    setTimeout(() => {
+      if (detectedWallets.size === 0 && window.ethereum) {
+        detectedWallets.set("legacy-injected", {
+          info: { uuid: "legacy-injected", name: "Browser Wallet", icon: "" },
+          provider: window.ethereum
+        });
+        renderWalletList();
+      }
+    }, 600);
   </script>
 </body>
 </html>
