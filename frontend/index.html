@@ -19,7 +19,15 @@
     .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
     .nav-dot { width: 24px; height: 24px; background: var(--blue); border-radius: 50%; }
     .nav-right { display: flex; align-items: center; gap: 12px; }
-    .wallet-pill { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; font-family: var(--mono); }
+    .wallet-pill { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; font-family: var(--mono); position: relative; cursor: default; }
+    .wallet-pill.connected { cursor: pointer; }
+    .wallet-pill.connected:hover { border-color: var(--blue-border); }
+    .wallet-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 150; }
+    .wallet-dropdown.show { display: block; }
+    .wallet-dropdown button { width: 100%; text-align: left; background: none; border: none; color: var(--text); padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: var(--sans); display: flex; align-items: center; gap: 8px; }
+    .wallet-dropdown button:hover { background: var(--surface-2); }
+    .wallet-dropdown button.danger { color: var(--error); }
+    .wallet-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
     .status-dot.on { background: var(--success); }
     .hero { text-align: center; padding: 64px 20px 48px; max-width: 600px; }
@@ -102,9 +110,15 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
-      <div class="wallet-pill">
+      <div class="wallet-pill" id="walletPill" onclick="toggleWalletDropdown()">
         <div class="status-dot" id="statusDot"></div>
         <span id="walletAddress">Not connected</span>
+        <div class="wallet-dropdown" id="walletDropdown">
+          <button onclick="copyWalletAddress(event)">📋 Copy Address</button>
+          <button onclick="viewOnExplorer(event)">🔍 View on Basescan</button>
+          <hr>
+          <button class="danger" onclick="disconnectWallet(event)">🔌 Disconnect</button>
+        </div>
       </div>
       <button class="btn-primary btn-sm" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
     </div>
@@ -368,6 +382,62 @@
     function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
     function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
+    // ─────────────────────────────────────────
+    // Wallet dropdown (copy / explorer / disconnect)
+    // ─────────────────────────────────────────
+    function toggleWalletDropdown() {
+      if (!walletAddress) return; // not connected yet, clicking the pill does nothing
+      document.getElementById("walletDropdown").classList.toggle("show");
+    }
+
+    document.addEventListener("click", (e) => {
+      const pill = document.getElementById("walletPill");
+      const dropdown = document.getElementById("walletDropdown");
+      if (pill && dropdown && !pill.contains(e.target)) {
+        dropdown.classList.remove("show");
+      }
+    });
+
+    function copyWalletAddress(event) {
+      event.stopPropagation();
+      if (!walletAddress) return;
+      navigator.clipboard.writeText(walletAddress).then(() => {
+        showToast("✅ Address copied!", "success");
+      });
+      document.getElementById("walletDropdown").classList.remove("show");
+    }
+
+    function viewOnExplorer(event) {
+      event.stopPropagation();
+      if (!walletAddress) return;
+      window.open(`https://sepolia.basescan.org/address/${walletAddress}`, "_blank");
+      document.getElementById("walletDropdown").classList.remove("show");
+    }
+
+    function disconnectWallet(event) {
+      event.stopPropagation();
+      walletAddress = null;
+      ownerAddress = null;
+      provider = null;
+      signer = null;
+      contract = null;
+
+      document.getElementById("walletAddress").textContent = "Not connected";
+      document.getElementById("statusDot").classList.remove("on");
+      document.getElementById("walletPill").classList.remove("connected");
+      document.getElementById("walletDropdown").classList.remove("show");
+      document.getElementById("connectBtn").style.display = "block";
+      document.getElementById("connectBtn").textContent = "Connect Wallet";
+      document.getElementById("connectBtn").disabled = false;
+      document.getElementById("createBtn").disabled = true;
+
+      document.getElementById("petitionList").innerHTML = '<div class="loading-state">Connect your wallet to load petitions.</div>';
+      document.getElementById("statTotal").textContent = "—";
+      document.getElementById("statActive").textContent = "—";
+
+      showToast("👋 Wallet disconnected", "");
+    }
+
     function updateCount(inputId, countId, max) {
       const len = document.getElementById(inputId).value.length;
       const el = document.getElementById(countId);
@@ -469,7 +539,8 @@
 
         document.getElementById("walletAddress").textContent = short(walletAddress);
         document.getElementById("statusDot").classList.add("on");
-        document.getElementById("connectBtn").textContent = "Connected";
+        document.getElementById("walletPill").classList.add("connected");
+        document.getElementById("connectBtn").style.display = "none";
         document.getElementById("createBtn").disabled = false;
 
         showToast("✅ Wallet connected!", "success");
@@ -512,6 +583,8 @@
             walletAddress = null;
             document.getElementById("walletAddress").textContent = "Not connected";
             document.getElementById("statusDot").classList.remove("on");
+            document.getElementById("walletPill").classList.remove("connected");
+            document.getElementById("connectBtn").style.display = "block";
             document.getElementById("connectBtn").textContent = "Connect Wallet";
             document.getElementById("createBtn").disabled = true;
           } else {
