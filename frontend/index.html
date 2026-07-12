@@ -13,6 +13,13 @@
       --text: #F0F0F8; --muted: #7A7A9A; --success: #00C896; --error: #FF4D6A; --warning: #FFB020;
       --sans: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
     }
+    html[data-theme="light"] {
+      --blue: #0052FF; --blue-dim: rgba(0,82,255,0.08); --blue-border: rgba(0,82,255,0.25);
+      --dark: #F7F8FA; --surface: #FFFFFF; --surface-2: #F1F2F5; --border: #E2E4E9;
+      --text: #14151A; --muted: #6B7080; --success: #00A67D; --error: #E0364F; --warning: #C77D00;
+    }
+    html { transition: background 0.2s; }
+    body, .card, nav, .petition-card, #toast, .modal { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
     html, body { min-height: 100vh; background: var(--dark); color: var(--text); font-family: var(--sans); }
     body { display: flex; flex-direction: column; align-items: center; padding: 0 0 80px; }
     nav { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
@@ -28,6 +35,9 @@
     .wallet-dropdown button:hover { background: var(--surface-2); }
     .wallet-dropdown button.danger { color: var(--error); }
     .wallet-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+    .theme-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 24px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
+    .theme-toggle .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+    html[data-theme="light"] .theme-toggle .knob { transform: translateX(16px); }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
     .status-dot.on { background: var(--success); }
     .hero { text-align: center; padding: 64px 20px 48px; max-width: 600px; }
@@ -110,6 +120,9 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+        <div class="knob" id="themeKnob">🌙</div>
+      </button>
       <div class="wallet-pill" id="walletPill" onclick="toggleWalletDropdown()">
         <div class="status-dot" id="statusDot"></div>
         <span id="walletAddress">Not connected</span>
@@ -380,6 +393,31 @@
     }
 
     function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
+
+    // ─────────────────────────────────────────
+    // Theme toggle (light / dark)
+    // ─────────────────────────────────────────
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      const knob = document.getElementById("themeKnob");
+      if (knob) knob.textContent = theme === "light" ? "☀️" : "🌙";
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+      const next = current === "light" ? "dark" : "light";
+      applyTheme(next);
+      try { localStorage.setItem("petitionbase-theme", next); } catch {}
+    }
+
+    (function initTheme() {
+      let saved = null;
+      try { saved = localStorage.getItem("petitionbase-theme"); } catch {}
+      if (!saved) {
+        saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      applyTheme(saved);
+    })();
     function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
     // ─────────────────────────────────────────
