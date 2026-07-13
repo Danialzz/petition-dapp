@@ -232,7 +232,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
   <script>
-    const CONTRACT_ADDRESS = "0xfBb8D6e2494F55bC2DD13f971c2efc8351a1c2cE";
+    const CONTRACT_ADDRESS = "0xCbb2032276703D4B21494c1973c709Ee0ACE1BF2";
     const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
 
     const ABI = [
@@ -340,7 +340,9 @@
       const id = Number(p.id);
       const deadline = Number(p.deadline);
       const isOpen = p.active && deadline > now;
-      const isOwner = walletAddress?.toLowerCase() === ownerAddress?.toLowerCase();
+      const isOwner = !!walletAddress && !!ownerAddress && walletAddress.toLowerCase() === ownerAddress.toLowerCase();
+      const isCreator = !!walletAddress && walletAddress.toLowerCase() === p.creator.toLowerCase();
+      const canRemove = isOwner || isCreator;
       const daysLeft = Math.ceil((deadline - now) / 86400);
 
       let statusBadge = isOpen
@@ -353,7 +355,7 @@
       else if (p.signed) actionBtn = `<button class="btn-sm btn-signed" disabled>✓ Signed</button>`;
       else actionBtn = `<button class="btn-sm btn-sign" onclick="signPetition(${id})">Sign</button>`;
 
-      let removeBtn = isOwner && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
+      let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
 
       return `
         <div class="petition-card ${!p.active ? 'removed' : ''}" id="petition-${id}">
