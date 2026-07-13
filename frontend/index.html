@@ -1,799 +1,381 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PetitionBase — Decentralized Petitions</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230052FF'/%3E%3C/svg%3E" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap');
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --blue: #0052FF; --blue-dim: rgba(0,82,255,0.12); --blue-border: rgba(0,82,255,0.3);
-      --dark: #0A0A0F; --surface: #13131A; --surface-2: #1C1C27; --border: #2A2A3D;
-      --text: #F0F0F8; --muted: #7A7A9A; --success: #00C896; --error: #FF4D6A; --warning: #FFB020;
-      --sans: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
-    }
-    html[data-theme="light"] {
-      --blue: #0052FF; --blue-dim: rgba(0,82,255,0.08); --blue-border: rgba(0,82,255,0.25);
-      --dark: #F7F8FA; --surface: #FFFFFF; --surface-2: #F1F2F5; --border: #E2E4E9;
-      --text: #14151A; --muted: #6B7080; --success: #00A67D; --error: #E0364F; --warning: #C77D00;
-    }
-    html { transition: background 0.2s; }
-    body, .card, nav, .petition-card, #toast, .modal { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
-    html, body { min-height: 100vh; background: var(--dark); color: var(--text); font-family: var(--sans); }
-    body { display: flex; flex-direction: column; align-items: center; padding: 0 0 80px; }
-    nav { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
-    .nav-dot { width: 24px; height: 24px; background: var(--blue); border-radius: 50%; }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .wallet-pill { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; font-family: var(--mono); position: relative; cursor: default; }
-    .wallet-pill.connected { cursor: pointer; }
-    .wallet-pill.connected:hover { border-color: var(--blue-border); }
-    .wallet-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 180px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 150; }
-    .wallet-dropdown.show { display: block; }
-    .wallet-dropdown button { width: 100%; text-align: left; background: none; border: none; color: var(--text); padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: var(--sans); display: flex; align-items: center; gap: 8px; }
-    .wallet-dropdown button:hover { background: var(--surface-2); }
-    .wallet-dropdown button.danger { color: var(--error); }
-    .wallet-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
-    .theme-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 24px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
-    .theme-toggle .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
-    html[data-theme="light"] .theme-toggle .knob { transform: translateX(16px); }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
-    .status-dot.on { background: var(--success); }
-    .hero { text-align: center; padding: 64px 20px 48px; max-width: 600px; }
-    .hero h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; margin-bottom: 16px; }
-    .hero h1 span { color: var(--blue); }
-    .hero p { color: var(--muted); font-size: 16px; line-height: 1.6; margin-bottom: 32px; }
-    .hero-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 32px; }
-    .stat { text-align: center; }
-    .stat-num { font-size: 28px; font-weight: 700; color: var(--blue); }
-    .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .main { width: 100%; max-width: 900px; padding: 0 20px; }
-    .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-    .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filter-bar input[type="text"] { flex: 2; min-width: 180px; }
-    .filter-bar select { flex: 1; min-width: 130px; }
-    @media (max-width: 700px) { .filter-bar { flex-direction: column; } .filter-bar input, .filter-bar select { width: 100%; } }
-    .tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 9px; cursor: pointer; color: var(--muted); transition: all 0.2s; border: none; background: none; font-family: var(--sans); }
-    .tab.active { background: var(--blue); color: #fff; }
-    .tab:hover:not(.active) { color: var(--text); }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 16px; }
-    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
-    .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    input[type="text"], input[type="number"], textarea, select { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: var(--sans); font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
-    input:focus, textarea:focus, select:focus { border-color: var(--blue); }
-    input::placeholder, textarea::placeholder { color: var(--muted); }
-    textarea { resize: vertical; min-height: 90px; }
-    select option { background: var(--surface-2); }
-    .char-count { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; font-family: var(--mono); }
-    .char-count.over { color: var(--error); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    button { font-family: var(--sans); font-size: 14px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
-    button:active { transform: scale(0.98); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .btn-primary { background: var(--blue); color: #fff; padding: 13px 24px; width: 100%; margin-top: 8px; }
-    .btn-primary:hover:not(:disabled) { opacity: 0.88; }
-    .btn-sm { padding: 8px 16px; font-size: 13px; }
-    .btn-sign { background: var(--blue); color: #fff; }
-    .btn-signed { background: var(--surface-2); color: var(--success); border: 1px solid var(--success); cursor: default; }
-    .btn-closed { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); cursor: default; }
-    .btn-remove { background: rgba(255,77,106,0.1); color: var(--error); border: 1px solid rgba(255,77,106,0.3); }
-    .btn-remove:hover { background: rgba(255,77,106,0.2); }
-    .petition-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 14px; transition: border-color 0.2s; }
-    .petition-card:hover { border-color: rgba(0,82,255,0.4); }
-    .petition-card.removed { opacity: 0.5; }
-    .petition-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-    .petition-title { font-size: 16px; font-weight: 700; line-height: 1.3; }
-    .petition-desc { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
-    .petition-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
-    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
-    .badge-cat { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue-border); }
-    .badge-open { background: rgba(0,200,150,0.1); color: var(--success); border: 1px solid rgba(0,200,150,0.3); }
-    .badge-closed { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
-    .badge-removed { background: rgba(255,77,106,0.1); color: var(--error); border: 1px solid rgba(255,77,106,0.3); }
-    .petition-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .sig-count { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
-    .sig-icon { font-size: 16px; }
-    .deadline-text { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-    .petition-actions { display: flex; gap: 8px; align-items: center; }
-    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-state { text-align: center; padding: 40px; color: var(--muted); }
-    #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 22px; font-size: 14px; font-weight: 500; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; white-space: normal; box-shadow: 0 8px 32px rgba(0,0,0,0.4); max-width: 90vw; text-align: center; }
-    #toast.show { transform: translateX(-50%) translateY(0); }
-    #toast.success { border-color: var(--success); }
-    #toast.error { border-color: var(--error); }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 90%; max-width: 420px; }
-    .modal h3 { font-size: 18px; margin-bottom: 8px; }
-    .modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 11px 20px; flex: 1; }
-    @media (max-width: 600px) {
-      nav { padding: 12px 16px; } .form-row { grid-template-columns: 1fr; }
-      .hero { padding: 40px 16px 32px; } .hero-stats { gap: 20px; }
-    }
-  
-/* ===== Base.org inspired redesign ===== */
-body::before{
-content:'';
-position:fixed;
-inset:0;
-pointer-events:none;
-background:
-radial-gradient(circle at 20% 20%, rgba(0,82,255,.12), transparent 30%),
-radial-gradient(circle at 80% 30%, rgba(0,82,255,.08), transparent 25%);
-}
-nav{
-backdrop-filter:blur(18px);
-background:rgba(10,15,30,.75)!important;
-}
-.hero h1{
-font-family:'Space Grotesk',sans-serif;
-font-size:clamp(48px,7vw,78px);
-letter-spacing:-3px;
-}
-.hero{
-padding-top:90px;
-}
-.card,.petition-card,.tabs,nav{
-border:1px solid rgba(255,255,255,.08)!important;
-box-shadow:0 10px 40px rgba(0,0,0,.18);
-}
-.card,.petition-card{
-background:rgba(19,19,26,.72)!important;
-backdrop-filter:blur(16px);
-border-radius:24px!important;
-}
-.petition-card:hover{
-transform:translateY(-4px);
-transition:all .25s ease;
-box-shadow:0 20px 50px rgba(0,82,255,.15);
-}
-.btn-primary,.tab.active{
-background:linear-gradient(135deg,#0052FF,#3B82F6)!important;
-box-shadow:0 10px 25px rgba(0,82,255,.25);
-}
-input,textarea,select{
-border-radius:14px!important;
-}
-.hero-stats .stat{
-background:rgba(255,255,255,.03);
-padding:20px 30px;
-border-radius:18px;
-border:1px solid rgba(255,255,255,.06);
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetitionBase | Decentralized Petitions on Base</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Base Network Theme Colors */
+            --base-blue: #0052ff;
+            --base-blue-glow: rgba(0, 82, 255, 0.35);
+            --bg-dark: #090a0c;
+            --panel-bg: rgba(20, 22, 26, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #8b92a5;
+        }
 
-</style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            /* Subtle futuristic ambient lighting */
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(0, 82, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 100%, rgba(0, 82, 255, 0.05) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, .font-tech {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: var(--base-blue);
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--base-blue);
+            border: 1px solid var(--base-blue);
+            box-shadow: 0 0 20px var(--base-blue-glow);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #0040d2;
+            box-shadow: 0 0 30px var(--base-blue-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        header {
+            text-align: center;
+            padding: 6rem 1rem 3rem 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.2rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a5b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats */
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem 3rem;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            color: var(--base-blue);
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main App Area */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem 2rem;
+            flex-grow: 1;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 1rem 0;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--text-main);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--base-blue);
+            box-shadow: 0 -2px 10px var(--base-blue-glow);
+        }
+
+        /* Form UI */
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+            color: #d1d5db;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .char-count {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--base-blue);
+            background: rgba(0, 82, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.15);
+        }
+
+        textarea.form-control {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238b92a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        /* Developer Signature */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .footer .creator {
+            color: var(--base-blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.5rem; }
+            .stats-container { gap: 1rem; }
+            .stat-card { padding: 1rem 2rem; }
+            .card { padding: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
-  <nav>
-    <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
-    <div class="nav-right">
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
-        <div class="knob" id="themeKnob">🌙</div>
-      </button>
-      <div class="wallet-pill" id="walletPill" onclick="toggleWalletDropdown()">
-        <div class="status-dot" id="statusDot"></div>
-        <span id="walletAddress">Not connected</span>
-        <div class="wallet-dropdown" id="walletDropdown">
-          <button onclick="copyWalletAddress(event)">📋 Copy Address</button>
-          <button onclick="viewOnExplorer(event)">🔍 View on Basescan</button>
-          <hr>
-          <button class="danger" onclick="disconnectWallet(event)">🔌 Disconnect</button>
+
+    <nav>
+        <div class="brand font-tech">Petition<span>Base</span></div>
+        <div class="nav-controls">
+            <button class="btn" id="themeToggle" title="Toggle Theme">🌙</button>
+            <button class="btn btn-primary" id="connectWalletBtn">Connect Wallet</button>
         </div>
-      </div>
-      <button class="btn-primary btn-sm" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
-    </div>
-  </nav>
+    </nav>
 
-  <div class="hero">
-    <h1>Build Change.<br><span>On Base.</span></h1>
-    <p>Launch transparent on-chain petitions secured by Base. Community driven, verifiable, and accessible to everyone.</p>
-    <div class="hero-stats">
-      <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Petitions</div></div>
-      <div class="stat"><div class="stat-num" id="statActive">—</div><div class="stat-label">Active Now</div></div>
-    </div>
-  </div>
-
-  <div class="main">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('browse')">Browse Petitions</button>
-      <button class="tab" onclick="switchTab('create')">Create Petition</button>
-    </div>
-
-    <div id="tab-browse">
-      <div class="filter-bar">
-        <input type="text" id="searchInput" placeholder="🔍 Search petitions by title..." oninput="applyFilters()" />
-        <select id="categoryFilter" onchange="applyFilters()">
-          <option value="">All Categories</option>
-          <option>Environment</option><option>Human Rights</option><option>Animal Welfare</option>
-          <option>Education</option><option>Healthcare</option><option>Politics</option>
-          <option>Technology</option><option>Community</option><option>Other</option>
-        </select>
-        <select id="statusFilter" onchange="applyFilters()">
-          <option value="">All Statuses</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-        </select>
-        <select id="sortFilter" onchange="applyFilters()">
-          <option value="newest">Newest First</option>
-          <option value="mostSigned">Most Signed</option>
-        </select>
-      </div>
-      <div id="petitionList"><div class="loading-state"><span class="spinner"></span> Loading petitions...</div></div>
-    </div>
-
-    <div id="tab-create" style="display:none">
-      <div class="card">
-        <div class="card-title">📝 Start a New Petition</div>
-        <div class="form-group">
-          <label class="form-label">Title</label>
-          <input type="text" id="newTitle" placeholder="Short, clear title (max 100 chars)" maxlength="100" oninput="updateCount('newTitle','titleCount',100)" />
-          <div class="char-count" id="titleCount">0 / 100</div>
+    <header>
+        <h1>Build Change. <br><span style="color: var(--base-blue);">On Base.</span></h1>
+        <p>Launch transparent on-chain petitions secured by the Base network. Community driven, verifiable, and accessible to everyone.</p>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3 id="totalPetitionsDisplay">0</h3>
+                <p>Total Petitions</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="activePetitionsDisplay">0</h3>
+                <p>Active Now</p>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea id="newDesc" placeholder="Explain your cause clearly (max 1000 chars)" maxlength="1000" oninput="updateCount('newDesc','descCount',1000)"></textarea>
-          <div class="char-count" id="descCount">0 / 1000</div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab active" id="browseTab">Browse Petitions</button>
+            <button class="tab" id="createTab">Create Petition</button>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Category</label>
-            <select id="newCategory">
-              <option value="">Select category...</option>
-              <option>Environment</option><option>Human Rights</option><option>Animal Welfare</option>
-              <option>Education</option><option>Healthcare</option><option>Politics</option>
-              <option>Technology</option><option>Community</option><option>Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Duration (days)</label>
-            <input type="number" id="newDuration" placeholder="e.g. 30" min="1" max="365" />
-          </div>
-        </div>
-        <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
-      </div>
-    </div>
-  </div>
 
-  <div class="modal-overlay" id="removeModal">
-    <div class="modal">
-      <h3>🚫 Remove Petition</h3>
-      <p>This petition will be marked as removed. Provide a reason (stored on-chain).</p>
-      <div class="form-group">
-        <label class="form-label">Reason</label>
-        <input type="text" id="removeReason" placeholder="e.g. Violates platform rules" />
-      </div>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeRemoveModal()">Cancel</button>
-        <button class="btn-primary btn-sm" style="flex:1" onclick="confirmRemove()">Confirm Remove</button>
-      </div>
-    </div>
-  </div>
+        <section id="browseSection" class="hidden">
+            <div class="card">
+                <p style="text-align: center; color: var(--text-muted);">Loading petitions...</p>
+                </div>
+        </section>
 
-  <div id="toast"></div>
+        <section id="createSection" class="card">
+            <h2 class="font-tech" style="margin-bottom: 1.5rem;">📝 Start a New Petition</h2>
+            
+            <form id="createPetitionForm">
+                <div class="form-group">
+                    <label for="petitionTitle">Title <span class="char-count">0 / 100</span></label>
+                    <input type="text" id="petitionTitle" class="form-control" placeholder="What do you want to change?">
+                </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+                <div class="form-group">
+                    <label for="petitionDescription">Description <span class="char-count">0 / 1000</span></label>
+                    <textarea id="petitionDescription" class="form-control" placeholder="Provide details about why this petition matters..."></textarea>
+                </div>
 
-  <script>
-    const CONTRACT_ADDRESS = "0xCbb2032276703D4B21494c1973c709Ee0ACE1BF2";
-    const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
+                <div class="form-group">
+                    <label for="petitionCategory">Category</label>
+                    <select id="petitionCategory" class="form-control">
+                        <option value="" disabled selected>Select category...</option>
+                        <option value="crypto">Crypto & Web3</option>
+                        <option value="environment">Environment</option>
+                        <option value="politics">Politics</option>
+                        <option value="technology">Technology</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
-    const ABI = [
-      "function createPetition(string,string,string,uint256) external returns (uint256)",
-      "function signPetition(uint256) external",
-      "function removePetition(uint256,string) external",
-      "function getPetition(uint256) external view returns (tuple(uint256 id,address creator,string title,string description,string category,uint256 deadline,uint256 signatureCount,bool active,uint256 createdAt))",
-      "function getTotalPetitions() external view returns (uint256)",
-      "function hasWalletSigned(uint256,address) external view returns (bool)",
-      "function isPetitionOpen(uint256) external view returns (bool)",
-      "function owner() external view returns (address)",
-      "event PetitionCreated(uint256 indexed,address indexed,string,string,uint256)",
-      "event PetitionSigned(uint256 indexed,address indexed,uint256)",
-      "event PetitionRemoved(uint256 indexed,address indexed,string)"
-    ];
+                <div class="form-group">
+                    <label for="petitionDuration">Duration (days)</label>
+                    <input type="number" id="petitionDuration" class="form-control" placeholder="e.g., 30" min="1" max="365">
+                </div>
 
-    let provider, signer, contract;
-    let readOnlyProvider, readContract;
-    let walletAddress = null;
-    let ownerAddress = null;
-    let removePetitionId = null;
-    let currentTab = "browse";
-    let allPetitionsCache = [];
+                <button type="submit" class="btn btn-primary btn-block font-tech">Create Petition on Base</button>
+            </form>
+        </section>
+    </main>
 
-    // Read-only connection to Base Sepolia's public RPC — lets anyone browse
-    // petitions without connecting a wallet. Only signing/creating/removing
-    // requires an actual connected wallet (see connectWithWallet()).
-    function initReadOnlyContract() {
-      readOnlyProvider = new ethers.JsonRpcProvider("https://sepolia.base.org");
-      readContract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, readOnlyProvider);
-    }
-    initReadOnlyContract();
+    <footer class="footer">
+        <p>Built with precision by <span class="creator">D</span> (DanialXBT) • Secured by Base</p>
+    </footer>
 
-    async function loadPetitions() {
-      const list = document.getElementById("petitionList");
-      list.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading petitions...</div>';
-      try {
-        const activeContract = contract || readContract;
-        const total = Number(await activeContract.getTotalPetitions());
-        if (total === 0) {
-          allPetitionsCache = [];
-          list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first to create one!</p></div>';
-          return;
-        }
-        const petitions = [];
-        for (let i = total; i >= 1; i--) {
-          const raw = await activeContract.getPetition(i);
-          const signed = walletAddress ? await activeContract.hasWalletSigned(i, walletAddress) : false;
-          petitions.push({
-            id: raw.id,
-            creator: raw.creator,
-            title: raw.title,
-            description: raw.description,
-            category: raw.category,
-            deadline: raw.deadline,
-            signatureCount: raw.signatureCount,
-            active: raw.active,
-            createdAt: raw.createdAt,
-            signed
-          });
-        }
-        allPetitionsCache = petitions;
-        applyFilters();
-      } catch (err) {
-        list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Failed to load</h3><p>${err.message}</p></div>`;
-      }
-    }
-
-    function applyFilters() {
-      const list = document.getElementById("petitionList");
-      const searchInput = document.getElementById("searchInput");
-      const categoryFilter = document.getElementById("categoryFilter");
-      const statusFilter = document.getElementById("statusFilter");
-      const sortFilter = document.getElementById("sortFilter");
-      if (!searchInput) return; // filter bar not in DOM yet
-
-      const search = searchInput.value.trim().toLowerCase();
-      const category = categoryFilter.value;
-      const status = statusFilter.value;
-      const sort = sortFilter.value;
-      const now = Math.floor(Date.now() / 1000);
-
-      let filtered = allPetitionsCache.filter(p => {
-        if (search && !p.title.toLowerCase().includes(search)) return false;
-        if (category && p.category !== category) return false;
-        if (status === "open" && !(p.active && Number(p.deadline) > now)) return false;
-        if (status === "closed" && (p.active && Number(p.deadline) > now)) return false;
-        return true;
-      });
-
-      if (sort === "mostSigned") {
-        filtered = [...filtered].sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount));
-      }
-      // "newest" is already the natural order from loadPetitions (highest id first)
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>Try a different search or filter.</p></div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(p => renderPetition(p, now)).join("");
-    }
-
-    function renderPetition(p, now) {
-      const id = Number(p.id);
-      const deadline = Number(p.deadline);
-      const isOpen = p.active && deadline > now;
-      const isOwner = !!walletAddress && !!ownerAddress && walletAddress.toLowerCase() === ownerAddress.toLowerCase();
-      const isCreator = !!walletAddress && walletAddress.toLowerCase() === p.creator.toLowerCase();
-      const canRemove = isOwner || isCreator;
-      const daysLeft = Math.ceil((deadline - now) / 86400);
-
-      let statusBadge = isOpen
-        ? `<span class="badge badge-open">● Open · ${daysLeft}d left</span>`
-        : p.active ? `<span class="badge badge-closed">Closed</span>` : `<span class="badge badge-removed">Removed</span>`;
-
-      let actionBtn = "";
-      if (!p.active) actionBtn = `<button class="btn-sm btn-closed" disabled>Removed</button>`;
-      else if (!isOpen) actionBtn = `<button class="btn-sm btn-closed" disabled>Closed</button>`;
-      else if (p.signed) actionBtn = `<button class="btn-sm btn-signed" disabled>✓ Signed</button>`;
-      else actionBtn = `<button class="btn-sm btn-sign" onclick="signPetition(${id})">Sign</button>`;
-
-      let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
-
-      return `
-        <div class="petition-card ${!p.active ? 'removed' : ''}" id="petition-${id}">
-          <div class="petition-header">
-            <div class="petition-title">${escHtml(p.title)}</div>
-            ${statusBadge}
-          </div>
-          <div class="petition-desc">${escHtml(p.description)}</div>
-          <div class="petition-meta">
-            <span class="badge badge-cat">${escHtml(p.category)}</span>
-            <span class="deadline-text">by ${escHtml(short(p.creator))}</span>
-          </div>
-          <div class="petition-footer">
-            <div class="sig-count"><span class="sig-icon">✍️</span>${Number(p.signatureCount).toLocaleString()} signature${Number(p.signatureCount) !== 1 ? "s" : ""}</div>
-            <div class="petition-actions">${removeBtn}${actionBtn}</div>
-          </div>
-        </div>`;
-    }
-
-    async function createPetition() {
-      const title = document.getElementById("newTitle").value.trim();
-      const desc = document.getElementById("newDesc").value.trim();
-      const category = document.getElementById("newCategory").value;
-      const duration = parseInt(document.getElementById("newDuration").value);
-
-      if (!title) { showToast("⚠️ Title is required.", "error"); return; }
-      if (!desc) { showToast("⚠️ Description is required.", "error"); return; }
-      if (!category) { showToast("⚠️ Please select a category.", "error"); return; }
-      if (!duration || duration < 1 || duration > 365) { showToast("⚠️ Duration must be 1–365 days.", "error"); return; }
-
-      const btn = document.getElementById("createBtn");
-      btn.innerHTML = '<span class="spinner"></span> Submitting...';
-      btn.disabled = true;
-
-      try {
-        const tx = await contract.createPetition(title, desc, category, duration);
-        showToast("⏳ Transaction sent — confirming...", "");
-        await tx.wait();
-        showToast("✅ Petition created on Base!", "success");
-        document.getElementById("newTitle").value = "";
-        document.getElementById("newDesc").value = "";
-        document.getElementById("newCategory").value = "";
-        document.getElementById("newDuration").value = "";
-        document.getElementById("titleCount").textContent = "0 / 100";
-        document.getElementById("descCount").textContent = "0 / 1000";
-        switchTab("browse");
-        await loadPetitions();
-        await loadStats();
-      } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
-      } finally {
-        btn.textContent = "Create Petition on Base";
-        btn.disabled = false;
-      }
-    }
-
-    async function signPetition(id) {
-      if (!contract || !walletAddress) {
-        showToast("🔗 Connect a wallet first to sign this petition.", "");
-        openWalletModal();
-        return;
-      }
-      const btn = document.querySelector(`#petition-${id} .btn-sign`);
-      if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
-      try {
-        const tx = await contract.signPetition(id);
-        showToast("⏳ Signing — confirming...", "");
-        await tx.wait();
-        showToast("✅ Petition signed!", "success");
-        await loadPetitions();
-        await loadStats();
-      } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
-        if (btn) { btn.textContent = "Sign"; btn.disabled = false; }
-      }
-    }
-
-    function openRemoveModal(id) {
-      removePetitionId = id;
-      document.getElementById("removeReason").value = "";
-      document.getElementById("removeModal").classList.add("show");
-    }
-    function closeRemoveModal() {
-      removePetitionId = null;
-      document.getElementById("removeModal").classList.remove("show");
-    }
-    async function confirmRemove() {
-      const reason = document.getElementById("removeReason").value.trim();
-      if (!reason) { showToast("⚠️ Please provide a reason.", "error"); return; }
-      closeRemoveModal();
-      try {
-        const tx = await contract.removePetition(removePetitionId, reason);
-        showToast("⏳ Removing — confirming...", "");
-        await tx.wait();
-        showToast("✅ Petition removed.", "success");
-        await loadPetitions();
-        await loadStats();
-      } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
-      }
-    }
-
-    async function loadStats() {
-      try {
-        const activeContract = contract || readContract;
-        const total = Number(await activeContract.getTotalPetitions());
-        document.getElementById("statTotal").textContent = total;
-        const now = Math.floor(Date.now() / 1000);
-        let active = 0;
-        for (let i = 1; i <= total; i++) {
-          const p = await activeContract.getPetition(i);
-          if (p.active && Number(p.deadline) > now) active++;
-        }
-        document.getElementById("statActive").textContent = active;
-      } catch {}
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.getElementById("tab-browse").style.display = tab === "browse" ? "block" : "none";
-      document.getElementById("tab-create").style.display = tab === "create" ? "block" : "none";
-      document.querySelectorAll(".tab").forEach((el, i) => {
-        el.classList.toggle("active", (i === 0 && tab === "browse") || (i === 1 && tab === "create"));
-      });
-    }
-
-    function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
-
-    // ─────────────────────────────────────────
-    // Theme toggle (light / dark)
-    // ─────────────────────────────────────────
-    function applyTheme(theme) {
-      document.documentElement.setAttribute("data-theme", theme);
-      const knob = document.getElementById("themeKnob");
-      if (knob) knob.textContent = theme === "light" ? "☀️" : "🌙";
-    }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-      const next = current === "light" ? "dark" : "light";
-      applyTheme(next);
-      try { localStorage.setItem("petitionbase-theme", next); } catch {}
-    }
-
-    (function initTheme() {
-      let saved = null;
-      try { saved = localStorage.getItem("petitionbase-theme"); } catch {}
-      if (!saved) {
-        saved = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-      }
-      applyTheme(saved);
-    })();
-    function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-    // ─────────────────────────────────────────
-    // Wallet dropdown (copy / explorer / disconnect)
-    // ─────────────────────────────────────────
-    function toggleWalletDropdown() {
-      if (!walletAddress) return; // not connected yet, clicking the pill does nothing
-      document.getElementById("walletDropdown").classList.toggle("show");
-    }
-
-    document.addEventListener("click", (e) => {
-      const pill = document.getElementById("walletPill");
-      const dropdown = document.getElementById("walletDropdown");
-      if (pill && dropdown && !pill.contains(e.target)) {
-        dropdown.classList.remove("show");
-      }
-    });
-
-    function copyWalletAddress(event) {
-      event.stopPropagation();
-      if (!walletAddress) return;
-      navigator.clipboard.writeText(walletAddress).then(() => {
-        showToast("✅ Address copied!", "success");
-      });
-      document.getElementById("walletDropdown").classList.remove("show");
-    }
-
-    function viewOnExplorer(event) {
-      event.stopPropagation();
-      if (!walletAddress) return;
-      window.open(`https://sepolia.basescan.org/address/${walletAddress}`, "_blank");
-      document.getElementById("walletDropdown").classList.remove("show");
-    }
-
-    function disconnectWallet(event) {
-      event.stopPropagation();
-      walletAddress = null;
-      ownerAddress = null;
-      provider = null;
-      signer = null;
-      contract = null;
-
-      document.getElementById("walletAddress").textContent = "Not connected";
-      document.getElementById("statusDot").classList.remove("on");
-      document.getElementById("walletPill").classList.remove("connected");
-      document.getElementById("walletDropdown").classList.remove("show");
-      document.getElementById("connectBtn").style.display = "block";
-      document.getElementById("connectBtn").textContent = "Connect Wallet";
-      document.getElementById("connectBtn").disabled = false;
-      document.getElementById("createBtn").disabled = true;
-
-      showToast("👋 Wallet disconnected", "");
-
-      // Petitions remain visible in read-only mode — only actions (sign/create/remove) need a wallet.
-      loadPetitions();
-      loadStats();
-    }
-
-    function updateCount(inputId, countId, max) {
-      const len = document.getElementById(inputId).value.length;
-      const el = document.getElementById(countId);
-      el.textContent = `${len} / ${max}`;
-      el.classList.toggle("over", len > max);
-    }
-
-    let toastTimer;
-    function showToast(msg, type) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.className = `show ${type}`;
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => { el.className = ""; }, 4500);
-    }
-
-    // ─────────────────────────────────────────
-    // Custom wallet picker (EIP-6963 + fallback)
-    // ─────────────────────────────────────────
-    const detectedWallets = new Map(); // uuid -> { info, provider }
-
-    // Modern wallets (MetaMask, Rabby, Zerion, Coinbase, etc.) announce themselves
-    // via this browser event instead of all fighting over window.ethereum.
-    window.addEventListener("eip6963:announceProvider", (event) => {
-      const { info, provider } = event.detail;
-      detectedWallets.set(info.uuid, { info, provider });
-      renderWalletList();
-    });
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-    function buildWalletModal() {
-      if (document.getElementById("walletPickerOverlay")) return;
-      const overlay = document.createElement("div");
-      overlay.id = "walletPickerOverlay";
-      overlay.className = "modal-overlay";
-      overlay.innerHTML = `
-        <div class="modal">
-          <h3>🔗 Connect a Wallet</h3>
-          <p>Choose a wallet to connect to PetitionBase.</p>
-          <div id="walletPickerList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
-          <button class="btn-cancel" onclick="closeWalletModal()">Cancel</button>
-        </div>`;
-      document.body.appendChild(overlay);
-      overlay.addEventListener("click", (e) => { if (e.target === overlay) closeWalletModal(); });
-    }
-
-    function renderWalletList() {
-      const listEl = document.getElementById("walletPickerList");
-      if (!listEl) return;
-
-      if (detectedWallets.size === 0) {
-        listEl.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding:12px 0;">
-          No wallet extensions detected. Install MetaMask, Coinbase Wallet, or another browser wallet to continue.
-        </div>`;
-        return;
-      }
-
-      listEl.innerHTML = "";
-      for (const { info } of detectedWallets.values()) {
-        const btn = document.createElement("button");
-        btn.className = "btn-secondary";
-        btn.style.cssText = "display:flex; align-items:center; gap:10px; width:100%; padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;";
-        btn.innerHTML = `<img src="${info.icon}" width="24" height="24" style="border-radius:6px;" /> ${escHtml(info.name)}`;
-        btn.onclick = () => connectWithWallet(info.uuid);
-        listEl.appendChild(btn);
-      }
-    }
-
-    window.openWalletModal = function () {
-      buildWalletModal();
-      renderWalletList();
-      document.getElementById("walletPickerOverlay").classList.add("show");
-    };
-
-    window.closeWalletModal = function () {
-      const overlay = document.getElementById("walletPickerOverlay");
-      if (overlay) overlay.classList.remove("show");
-    };
-
-    async function connectWithWallet(uuid) {
-      const entry = detectedWallets.get(uuid);
-      if (!entry) return;
-      const eip1193Provider = entry.provider;
-
-      closeWalletModal();
-
-      try {
-        const accounts = await eip1193Provider.request({ method: "eth_requestAccounts" });
-        if (!accounts || accounts.length === 0) {
-          showToast("❌ No account returned. Try again.", "error");
-          return;
-        }
-
-        provider = new ethers.BrowserProvider(eip1193Provider);
-        signer = await provider.getSigner();
-        walletAddress = accounts[0];
-        contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
-        ownerAddress = await contract.owner();
-
-        document.getElementById("walletAddress").textContent = short(walletAddress);
-        document.getElementById("statusDot").classList.add("on");
-        document.getElementById("walletPill").classList.add("connected");
-        document.getElementById("connectBtn").style.display = "none";
-        document.getElementById("createBtn").disabled = false;
-
-        showToast("✅ Wallet connected!", "success");
-        await loadPetitions();
-        await loadStats();
-
-        // Switch network only after everything above has succeeded.
-        try {
-          const network = await provider.getNetwork();
-          if (Number(network.chainId) !== 84532) {
-            await eip1193Provider.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }]
-            });
-          }
-        } catch (switchErr) {
-          if (switchErr.code === 4902) {
-            try {
-              await eip1193Provider.request({
-                method: "wallet_addEthereumChain",
-                params: [{
-                  chainId: BASE_SEPOLIA_CHAIN_ID,
-                  chainName: "Base Sepolia Testnet",
-                  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://sepolia.base.org"],
-                  blockExplorerUrls: ["https://sepolia.basescan.org"]
-                }]
-              });
-            } catch (addErr) {
-              console.warn("Could not add Base Sepolia automatically:", addErr);
-            }
-          } else {
-            console.warn("Could not switch network automatically:", switchErr);
-          }
-        }
-
-        // Keep UI state in sync if the user changes accounts or disconnects in their wallet.
-        eip1193Provider.on?.("accountsChanged", (accs) => {
-          if (!accs || accs.length === 0) {
-            walletAddress = null;
-            document.getElementById("walletAddress").textContent = "Not connected";
-            document.getElementById("statusDot").classList.remove("on");
-            document.getElementById("walletPill").classList.remove("connected");
-            document.getElementById("connectBtn").style.display = "block";
-            document.getElementById("connectBtn").textContent = "Connect Wallet";
-            document.getElementById("createBtn").disabled = true;
-          } else {
-            walletAddress = accs[0];
-            document.getElementById("walletAddress").textContent = short(walletAddress);
-            loadPetitions();
-            loadStats();
-          }
-        });
-      } catch (err) {
-        console.error("Connection failed:", err);
-        showToast("❌ " + (err.message || "Connection failed"), "error");
-      }
-    }
-
-    // Fallback: if no EIP-6963 wallets ever announce (older wallet versions),
-    // offer a plain window.ethereum connect after a short grace period.
-    setTimeout(() => {
-      if (detectedWallets.size === 0 && window.ethereum) {
-        detectedWallets.set("legacy-injected", {
-          info: { uuid: "legacy-injected", name: "Browser Wallet", icon: "" },
-          provider: window.ethereum
-        });
-        renderWalletList();
-      }
-    }, 600);
-
-    // Anyone can browse petitions without connecting a wallet.
-    loadPetitions();
-    loadStats();
-  </script>
 </body>
 </html>
