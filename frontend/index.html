@@ -100,6 +100,11 @@
     .card-title { font-family: var(--display); font-size: 16px; font-weight: 600; margin-bottom: 22px; letter-spacing: -0.2px; }
     .form-group { margin-bottom: 18px; }
     .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .label-optional { text-transform: none; font-weight: 400; letter-spacing: 0; font-size: 11px; }
+    .goal-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+    .goal-chip { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); padding: 8px 14px; border-radius: 7px; font-size: 13px; font-weight: 600; font-family: var(--mono); }
+    .goal-chip:hover { border-color: var(--blue-border); color: var(--text); }
+    .goal-chip.active { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
 
     input[type="text"], input[type="number"], textarea, select {
       width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
@@ -159,7 +164,9 @@
     .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .progress-track { flex: 1; height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
     .progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.4s ease; }
+    .progress-fill.reached { background: var(--success); }
     .progress-label { font-size: 11px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+    .progress-auto { opacity: 0.6; font-style: italic; }
 
     .petition-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
     .footer-left { display: flex; align-items: center; gap: 10px; }
@@ -315,6 +322,18 @@
             <input type="number" id="newDuration" placeholder="e.g. 30" min="1" max="365" />
           </div>
         </div>
+        <div class="form-group">
+          <label class="form-label">Signature Target <span class="label-optional">(optional)</span></label>
+          <div class="goal-picker" id="goalPicker">
+            <button type="button" class="goal-chip active" data-goal="0" onclick="selectGoal(0, this)">No target</button>
+            <button type="button" class="goal-chip" data-goal="10" onclick="selectGoal(10, this)">10</button>
+            <button type="button" class="goal-chip" data-goal="100" onclick="selectGoal(100, this)">100</button>
+            <button type="button" class="goal-chip" data-goal="1000" onclick="selectGoal(1000, this)">1,000</button>
+            <button type="button" class="goal-chip" data-goal="10000" onclick="selectGoal(10000, this)">10,000</button>
+            <button type="button" class="goal-chip" data-goal="custom" onclick="selectGoal('custom', this)">Custom</button>
+          </div>
+          <input type="number" id="newGoalCustom" placeholder="Enter a custom target..." min="1" max="10000000" style="display:none; margin-top:8px;" />
+        </div>
         <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
       </div>
     </div>
@@ -344,10 +363,10 @@
     const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
 
     const ABI = [
-      "function createPetition(string,string,string,uint256) external returns (uint256)",
+      "function createPetition(string,string,string,uint256,uint256) external returns (uint256)",
       "function signPetition(uint256) external",
       "function removePetition(uint256,string) external",
-      "function getPetition(uint256) external view returns (tuple(uint256 id,address creator,string title,string description,string category,uint256 deadline,uint256 signatureCount,bool active,uint256 createdAt))",
+      "function getPetition(uint256) external view returns (tuple(uint256 id,address creator,string title,string description,string category,uint256 deadline,uint256 signatureCount,uint256 signatureGoal,bool active,uint256 createdAt))",
       "function getTotalPetitions() external view returns (uint256)",
       "function hasWalletSigned(uint256,address) external view returns (bool)",
       "function isPetitionOpen(uint256) external view returns (bool)",
@@ -415,6 +434,7 @@
             category: raw.category,
             deadline: raw.deadline,
             signatureCount: raw.signatureCount,
+            signatureGoal: raw.signatureGoal,
             active: raw.active,
             createdAt: raw.createdAt,
             signed
@@ -488,12 +508,17 @@
     // Milestone-based progress (no fixed "goal" exists on-chain, so we show
     // progress toward the next round milestone — meaningful without needing
     // a contract change).
-    function getMilestoneProgress(count) {
+    function getProgressInfo(count, goal) {
+      if (goal > 0) {
+        const pct = Math.min(100, Math.round((count / goal) * 100));
+        return { target: goal, pct: Math.max(pct, count > 0 ? 2 : 0), isRealGoal: true, reached: count >= goal };
+      }
+      // No creator-set goal — fall back to an auto milestone display.
       const milestones = [10, 25, 50, 100, 250, 500, 1000];
       const next = milestones.find(m => m > count) || (count > 0 ? count * 2 : 10);
       const prevMilestone = milestones[milestones.indexOf(next) - 1] || 0;
       const pct = Math.min(100, Math.round(((count - prevMilestone) / (next - prevMilestone)) * 100));
-      return { next, pct: Math.max(pct, count > 0 ? 4 : 0) };
+      return { target: next, pct: Math.max(pct, count > 0 ? 4 : 0), isRealGoal: false, reached: false };
     }
 
     function formatDate(unixTs) {
@@ -510,6 +535,7 @@
       const canRemove = isOwner || isCreator;
       const daysLeft = Math.ceil((deadline - now) / 86400);
       const sigCount = Number(p.signatureCount);
+      const sigGoal = Number(p.signatureGoal || 0);
 
       let statusBadge = isOpen
         ? `<span class="badge badge-open">● Open · ${daysLeft}d left</span>`
@@ -527,7 +553,7 @@
 
       let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
 
-      const milestone = getMilestoneProgress(sigCount);
+      const progress = getProgressInfo(sigCount, sigGoal);
       const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
       const shareUrl = `${window.location.origin}${window.location.pathname}?petition=${id}`;
 
@@ -545,8 +571,10 @@
           </div>
 
           <div class="progress-row">
-            <div class="progress-track"><div class="progress-fill" style="width:${milestone.pct}%"></div></div>
-            <span class="progress-label">${sigCount.toLocaleString()} / ${milestone.next.toLocaleString()}</span>
+            <div class="progress-track"><div class="progress-fill ${progress.reached ? 'reached' : ''}" style="width:${progress.pct}%"></div></div>
+            <span class="progress-label">
+              ${progress.reached ? '🎉 Goal reached — ' : ''}${sigCount.toLocaleString()} / ${progress.target.toLocaleString()}${!progress.isRealGoal ? ' <span class="progress-auto">(auto)</span>' : ''}
+            </span>
           </div>
 
           <div class="petition-footer">
@@ -601,11 +629,34 @@
       });
     }
 
+    let selectedGoal = 0;
+
+    function selectGoal(value, btnEl) {
+      document.querySelectorAll("#goalPicker .goal-chip").forEach(el => el.classList.remove("active"));
+      btnEl.classList.add("active");
+      const customInput = document.getElementById("newGoalCustom");
+      if (value === "custom") {
+        customInput.style.display = "block";
+        customInput.focus();
+        selectedGoal = "custom";
+      } else {
+        customInput.style.display = "none";
+        selectedGoal = value;
+      }
+    }
+
     async function createPetition() {
       const title = document.getElementById("newTitle").value.trim();
       const desc = document.getElementById("newDesc").value.trim();
       const category = document.getElementById("newCategory").value;
       const duration = parseInt(document.getElementById("newDuration").value);
+
+      let goal = selectedGoal;
+      if (goal === "custom") {
+        goal = parseInt(document.getElementById("newGoalCustom").value);
+        if (!goal || goal < 1) { showToast("⚠️ Enter a valid custom target.", "error"); return; }
+        if (goal > 10000000) { showToast("⚠️ Target is too large.", "error"); return; }
+      }
 
       if (!title) { showToast("⚠️ Title is required.", "error"); return; }
       if (!desc) { showToast("⚠️ Description is required.", "error"); return; }
@@ -617,7 +668,7 @@
       btn.disabled = true;
 
       try {
-        const tx = await contract.createPetition(title, desc, category, duration);
+        const tx = await contract.createPetition(title, desc, category, duration, goal);
         showToast("⏳ Transaction sent — confirming...", "");
         await tx.wait();
         showToast("✅ Petition created on Base!", "success");
@@ -625,8 +676,13 @@
         document.getElementById("newDesc").value = "";
         document.getElementById("newCategory").value = "";
         document.getElementById("newDuration").value = "";
+        document.getElementById("newGoalCustom").value = "";
+        document.getElementById("newGoalCustom").style.display = "none";
         document.getElementById("titleCount").textContent = "0 / 100";
         document.getElementById("descCount").textContent = "0 / 1000";
+        selectedGoal = 0;
+        document.querySelectorAll("#goalPicker .goal-chip").forEach(el => el.classList.remove("active"));
+        document.querySelector('#goalPicker .goal-chip[data-goal="0"]').classList.add("active");
         switchTab("browse");
         await loadPetitions();
         await loadStats();
