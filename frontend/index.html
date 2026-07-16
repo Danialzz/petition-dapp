@@ -47,6 +47,12 @@
 
     /* ── Theme toggle ── */
     .theme-toggle { display: flex; align-items: center; justify-content: center; width: 38px; height: 22px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
+    .network-badge { display: none; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--mono); padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); }
+    .network-badge.show { display: flex; }
+    .network-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .network-dot.online { background: var(--success); }
+    .network-dot.offline { background: var(--error); }
+    @media (max-width: 640px) { .network-badge span { display: none; } }
     .theme-toggle .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 4px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
     html[data-theme="light"] .theme-toggle .knob { transform: translateX(14px); }
 
@@ -129,22 +135,47 @@
     }
     .petition-card:hover { border-color: var(--blue-border); }
     .petition-card.removed { opacity: 0.45; }
+    .petition-card.highlighted { animation: highlight-pulse 2.4s ease; }
+    @keyframes highlight-pulse {
+      0%, 100% { box-shadow: none; }
+      15%, 60% { box-shadow: 0 0 0 3px var(--blue-border); }
+    }
     .petition-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
     .petition-title { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.35; letter-spacing: -0.1px; }
     .petition-desc { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
     .petition-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
 
-    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; letter-spacing: 0.2px; }
+    .badge-group { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; letter-spacing: 0.2px; white-space: nowrap; }
     .badge-cat { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue-border); }
     .badge-open { background: rgba(47,190,127,0.08); color: var(--success); border: 1px solid rgba(47,190,127,0.24); }
     .badge-closed { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
     .badge-removed { background: rgba(240,80,107,0.08); color: var(--error); border: 1px solid rgba(240,80,107,0.24); }
+    .badge-trending { background: rgba(255,149,0,0.1); color: #ff9500; border: 1px solid rgba(255,149,0,0.28); }
+
+    .creator-link { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--border); }
+    .creator-link:hover { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .progress-track { flex: 1; height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.4s ease; }
+    .progress-label { font-size: 11px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
 
     .petition-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .sig-count { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); }
+    .footer-left { display: flex; align-items: center; gap: 10px; }
+    .link-btn { background: none; border: none; padding: 0; font-size: 13px; color: var(--muted); cursor: pointer; font-family: var(--sans); }
+    .link-btn:hover { color: var(--text); }
+    .icon-btn { background: var(--surface-2); border: 1px solid var(--border); width: 28px; height: 28px; border-radius: 7px; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .icon-btn:hover { border-color: var(--blue-border); }
     .sig-count-num { font-family: var(--mono); font-weight: 700; color: var(--text); font-size: 14px; }
     .deadline-text { font-size: 12px; color: var(--muted); font-family: var(--mono); }
     .petition-actions { display: flex; gap: 8px; align-items: center; }
+
+    .signer-list { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .signer-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .signer-chip { font-family: var(--mono); font-size: 11px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); padding: 4px 9px; border-radius: 6px; text-decoration: none; }
+    .signer-chip:hover { color: var(--blue); border-color: var(--blue-border); }
+    .signer-empty { font-size: 12px; color: var(--muted); padding: 4px 0; }
 
     /* ── Empty / loading ── */
     .empty { text-align: center; padding: 64px 20px; color: var(--muted); }
@@ -170,8 +201,22 @@
     .btn-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 11px 20px; flex: 1; }
 
     @media (max-width: 600px) {
-      nav { padding: 14px 16px; } .form-row { grid-template-columns: 1fr; }
-      .hero { padding: 48px 16px 36px; } .hero-stats { gap: 24px; }
+      nav { padding: 12px 14px; gap: 8px; }
+      .nav-logo { font-size: 15px; }
+      .form-row { grid-template-columns: 1fr; }
+      .hero { padding: 40px 16px 32px; }
+      .hero-stats { gap: 16px; }
+      .hero h1 { font-size: 30px; }
+      .stat-num { font-size: 22px; }
+      .stat-label { font-size: 10px; }
+      .petition-header { flex-direction: column; gap: 8px; }
+      .badge-group { justify-content: flex-start; }
+      .petition-footer { align-items: flex-start; }
+      .footer-left { flex-wrap: wrap; }
+      .petition-actions { width: 100%; justify-content: flex-end; }
+    }
+    @media (max-width: 400px) {
+      .network-badge { display: none !important; }
     }
   </style>
 </head>
@@ -179,6 +224,10 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
+      <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
+        <div class="network-dot" id="networkDot"></div>
+        <span>Base Sepolia</span>
+      </div>
       <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
         <div class="knob" id="themeKnob">🌙</div>
       </button>
@@ -206,6 +255,7 @@
     <div class="hero-stats">
       <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Petitions</div></div>
       <div class="stat"><div class="stat-num" id="statActive">—</div><div class="stat-label">Active Now</div></div>
+      <div class="stat"><div class="stat-num" id="statSignatures">—</div><div class="stat-label">Total Signatures</div></div>
     </div>
   </div>
 
@@ -301,6 +351,7 @@
       "function getTotalPetitions() external view returns (uint256)",
       "function hasWalletSigned(uint256,address) external view returns (bool)",
       "function isPetitionOpen(uint256) external view returns (bool)",
+      "function getSigners(uint256) external view returns (address[] memory)",
       "function owner() external view returns (address)",
       "event PetitionCreated(uint256 indexed,address indexed,string,string,uint256)",
       "event PetitionSigned(uint256 indexed,address indexed,uint256)",
@@ -323,6 +374,23 @@
       readContract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, readOnlyProvider);
     }
     initReadOnlyContract();
+
+    async function checkNetworkStatus() {
+      const badge = document.getElementById("networkBadge");
+      const dot = document.getElementById("networkDot");
+      if (!badge || !dot) return;
+      badge.classList.add("show");
+      try {
+        await readOnlyProvider.getBlockNumber();
+        dot.classList.add("online");
+        dot.classList.remove("offline");
+      } catch {
+        dot.classList.add("offline");
+        dot.classList.remove("online");
+      }
+    }
+    checkNetworkStatus();
+    setInterval(checkNetworkStatus, 30000);
 
     async function loadPetitions() {
       const list = document.getElementById("petitionList");
@@ -373,6 +441,15 @@
       const sort = sortFilter.value;
       const now = Math.floor(Date.now() / 1000);
 
+      // Trending = top 3 open petitions by signature count (simple, fair, no extra contract calls)
+      const trendingIds = new Set(
+        allPetitionsCache
+          .filter(p => p.active && Number(p.deadline) > now && Number(p.signatureCount) > 0)
+          .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount))
+          .slice(0, 3)
+          .map(p => Number(p.id))
+      );
+
       let filtered = allPetitionsCache.filter(p => {
         if (search && !p.title.toLowerCase().includes(search)) return false;
         if (category && p.category !== category) return false;
@@ -391,10 +468,40 @@
         return;
       }
 
-      list.innerHTML = filtered.map(p => renderPetition(p, now)).join("");
+      list.innerHTML = filtered.map(p => renderPetition(p, now, trendingIds.has(Number(p.id)))).join("");
+      highlightPetitionFromUrl();
     }
 
-    function renderPetition(p, now) {
+    // Deep-link support: ?petition=3 scrolls to and highlights that petition.
+    function highlightPetitionFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get("petition");
+      if (!targetId) return;
+      const el = document.getElementById(`petition-${targetId}`);
+      if (el) {
+        el.classList.add("highlighted");
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => el.classList.remove("highlighted"), 2600);
+      }
+    }
+
+    // Milestone-based progress (no fixed "goal" exists on-chain, so we show
+    // progress toward the next round milestone — meaningful without needing
+    // a contract change).
+    function getMilestoneProgress(count) {
+      const milestones = [10, 25, 50, 100, 250, 500, 1000];
+      const next = milestones.find(m => m > count) || (count > 0 ? count * 2 : 10);
+      const prevMilestone = milestones[milestones.indexOf(next) - 1] || 0;
+      const pct = Math.min(100, Math.round(((count - prevMilestone) / (next - prevMilestone)) * 100));
+      return { next, pct: Math.max(pct, count > 0 ? 4 : 0) };
+    }
+
+    function formatDate(unixTs) {
+      const d = new Date(Number(unixTs) * 1000);
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function renderPetition(p, now, isTrending) {
       const id = Number(p.id);
       const deadline = Number(p.deadline);
       const isOpen = p.active && deadline > now;
@@ -402,10 +509,13 @@
       const isCreator = !!walletAddress && walletAddress.toLowerCase() === p.creator.toLowerCase();
       const canRemove = isOwner || isCreator;
       const daysLeft = Math.ceil((deadline - now) / 86400);
+      const sigCount = Number(p.signatureCount);
 
       let statusBadge = isOpen
         ? `<span class="badge badge-open">● Open · ${daysLeft}d left</span>`
         : p.active ? `<span class="badge badge-closed">Closed</span>` : `<span class="badge badge-removed">Removed</span>`;
+
+      let trendingBadge = isTrending ? `<span class="badge badge-trending">🔥 Trending</span>` : "";
 
       let tallyColor = isOpen ? "var(--blue)" : p.active ? "var(--border)" : "var(--error)";
 
@@ -417,22 +527,78 @@
 
       let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
 
+      const milestone = getMilestoneProgress(sigCount);
+      const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
+      const shareUrl = `${window.location.origin}${window.location.pathname}?petition=${id}`;
+
       return `
         <div class="petition-card ${!p.active ? 'removed' : ''}" id="petition-${id}" style="--tally-fill:${tallyColor}">
           <div class="petition-header">
             <div class="petition-title">${escHtml(p.title)}</div>
-            ${statusBadge}
+            <div class="badge-group">${trendingBadge}${statusBadge}</div>
           </div>
           <div class="petition-desc">${escHtml(p.description)}</div>
           <div class="petition-meta">
             <span class="badge badge-cat">${escHtml(p.category)}</span>
-            <span class="deadline-text">Filed by ${escHtml(short(p.creator))}</span>
+            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Filed by ${escHtml(short(p.creator))}</a>
+            <span class="deadline-text">· ${formatDate(p.createdAt)}</span>
           </div>
+
+          <div class="progress-row">
+            <div class="progress-track"><div class="progress-fill" style="width:${milestone.pct}%"></div></div>
+            <span class="progress-label">${sigCount.toLocaleString()} / ${milestone.next.toLocaleString()}</span>
+          </div>
+
           <div class="petition-footer">
-            <div class="sig-count"><span class="sig-count-num">${Number(p.signatureCount).toLocaleString()}</span> signature${Number(p.signatureCount) !== 1 ? "s" : ""}</div>
+            <div class="footer-left">
+              <button class="link-btn" onclick="toggleSignerList(${id})">
+                <span class="sig-count-num">${sigCount.toLocaleString()}</span> signature${sigCount !== 1 ? "s" : ""}
+              </button>
+              <button class="icon-btn" onclick="sharePetition(${id}, event)" title="Copy link">🔗</button>
+            </div>
             <div class="petition-actions">${removeBtn}${actionBtn}</div>
           </div>
+
+          <div class="signer-list" id="signers-${id}" style="display:none"></div>
         </div>`;
+    }
+
+    // Lazy-load and toggle a petition's signer list (only fetched on demand to save calls)
+    const signerListCache = new Map();
+    async function toggleSignerList(id) {
+      const panel = document.getElementById(`signers-${id}`);
+      if (!panel) return;
+      const isOpen = panel.style.display !== "none";
+      if (isOpen) { panel.style.display = "none"; return; }
+
+      panel.style.display = "block";
+      if (signerListCache.has(id)) {
+        panel.innerHTML = signerListCache.get(id);
+        return;
+      }
+
+      panel.innerHTML = `<div class="loading-state" style="padding:14px 0"><span class="spinner"></span> Loading signers...</div>`;
+      try {
+        const activeContract = contract || readContract;
+        const signers = await activeContract.getSigners(id);
+        const html = signers.length === 0
+          ? `<div class="signer-empty">No signatures yet.</div>`
+          : `<div class="signer-grid">${signers.map(a => `<a href="https://sepolia.basescan.org/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
+        signerListCache.set(id, html);
+        panel.innerHTML = html;
+      } catch (err) {
+        panel.innerHTML = `<div class="signer-empty">Couldn't load signers.</div>`;
+      }
+    }
+
+    function sharePetition(id, event) {
+      event.stopPropagation();
+      const url = `${window.location.origin}${window.location.pathname}?petition=${id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("🔗 Link copied to clipboard!", "success");
+      }).catch(() => {
+        showToast("❌ Couldn't copy link.", "error");
+      });
     }
 
     async function createPetition() {
@@ -520,16 +686,34 @@
 
     async function loadStats() {
       try {
-        const activeContract = contract || readContract;
-        const total = Number(await activeContract.getTotalPetitions());
-        document.getElementById("statTotal").textContent = total;
-        const now = Math.floor(Date.now() / 1000);
-        let active = 0;
-        for (let i = 1; i <= total; i++) {
-          const p = await activeContract.getPetition(i);
-          if (p.active && Number(p.deadline) > now) active++;
+        // Prefer the already-loaded cache to avoid a second round of RPC calls.
+        if (allPetitionsCache.length > 0 || (contract || readContract)) {
+          const activeContract = contract || readContract;
+          const total = Number(await activeContract.getTotalPetitions());
+          document.getElementById("statTotal").textContent = total;
+
+          if (allPetitionsCache.length === total && total > 0) {
+            const now = Math.floor(Date.now() / 1000);
+            const active = allPetitionsCache.filter(p => p.active && Number(p.deadline) > now).length;
+            const totalSigs = allPetitionsCache.reduce((sum, p) => sum + Number(p.signatureCount), 0);
+            document.getElementById("statActive").textContent = active;
+            document.getElementById("statSignatures").textContent = totalSigs.toLocaleString();
+          } else if (total === 0) {
+            document.getElementById("statActive").textContent = 0;
+            document.getElementById("statSignatures").textContent = 0;
+          } else {
+            // Cache not populated yet (e.g. stats loaded before petitions) — fall back to direct fetch.
+            const now = Math.floor(Date.now() / 1000);
+            let active = 0, totalSigs = 0;
+            for (let i = 1; i <= total; i++) {
+              const p = await activeContract.getPetition(i);
+              if (p.active && Number(p.deadline) > now) active++;
+              totalSigs += Number(p.signatureCount);
+            }
+            document.getElementById("statActive").textContent = active;
+            document.getElementById("statSignatures").textContent = totalSigs.toLocaleString();
+          }
         }
-        document.getElementById("statActive").textContent = active;
       } catch {}
     }
 
