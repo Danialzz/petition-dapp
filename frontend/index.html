@@ -786,9 +786,10 @@
         if (!reason) { showToast("⚠️ Please select or enter a reason.", "error"); return; }
       }
 
+      const idToRemove = removePetitionId; // capture before closeRemoveModal() clears it
       closeRemoveModal();
       try {
-        const tx = await contract.removePetition(removePetitionId, reason);
+        const tx = await contract.removePetition(idToRemove, reason);
         showToast("⏳ Removing — confirming...", "");
         await tx.wait();
         showToast("✅ Petition removed.", "success");
