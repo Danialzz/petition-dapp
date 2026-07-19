@@ -106,6 +106,20 @@
     .goal-chip:hover { border-color: var(--blue-border); color: var(--text); }
     .goal-chip.active { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
 
+    .agree-row { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 6px; cursor: pointer; }
+    .agree-row input[type="checkbox"] { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
+    .agree-row span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .agree-row a { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--blue-border); }
+    .agree-row a:hover { border-bottom-style: solid; }
+
+    .rules-modal .modal { max-width: 560px; max-height: 80vh; overflow-y: auto; }
+    .rules-body { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .rules-body h4 { font-family: var(--display); font-size: 14px; color: var(--text); margin: 18px 0 6px; font-weight: 600; }
+    .rules-body h4:first-child { margin-top: 0; }
+    .rules-body ul { padding-left: 20px; margin: 4px 0; }
+    .rules-body li { margin-bottom: 4px; }
+    .rules-footer-note { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 14px; margin-top: 16px; }
+
     input[type="text"], input[type="number"], textarea, select {
       width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
       padding: 12px 14px; font-family: var(--sans); font-size: 14px; color: var(--text); outline: none;
@@ -334,6 +348,10 @@
           </div>
           <input type="number" id="newGoalCustom" placeholder="Enter a custom target..." min="1" max="10000000" style="display:none; margin-top:8px;" />
         </div>
+        <label class="agree-row">
+          <input type="checkbox" id="agreeRules" onchange="updateCreateBtnState()" />
+          <span>I agree to the <a href="#" onclick="openRulesModal(event)">Community Guidelines</a> and confirm this petition doesn't violate them.</span>
+        </label>
         <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
       </div>
     </div>
@@ -360,6 +378,54 @@
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeRemoveModal()">Cancel</button>
         <button class="btn-primary btn-sm" style="flex:1" onclick="confirmRemove()">Confirm Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay rules-modal" id="rulesModal">
+    <div class="modal">
+      <h3>Community Guidelines</h3>
+      <p>Read before creating a petition. Violations may be removed by the platform moderator.</p>
+      <div class="rules-body">
+        <h4>1. No NSFW or sexual content</h4>
+        <ul>
+          <li>No sexual, pornographic, or explicit content of any kind.</li>
+          <li>No content sexualizing minors under any circumstance — this is never tolerated and may be reported to relevant authorities.</li>
+        </ul>
+
+        <h4>2. No hate speech or harassment</h4>
+        <ul>
+          <li>No content attacking people based on race, ethnicity, religion, gender, sexual orientation, disability, or nationality.</li>
+          <li>No targeted harassment, doxxing, or threats against individuals.</li>
+        </ul>
+
+        <h4>3. No illegal content</h4>
+        <ul>
+          <li>No petitions promoting violence, terrorism, or illegal activity.</li>
+          <li>No content facilitating fraud, scams, or illegal goods/services.</li>
+        </ul>
+
+        <h4>4. No spam or misleading content</h4>
+        <ul>
+          <li>No duplicate petitions posted repeatedly to inflate signature counts.</li>
+          <li>No deliberately false or misleading claims presented as fact.</li>
+          <li>No impersonation of real people, brands, or organizations.</li>
+        </ul>
+
+        <h4>5. Keep it a genuine petition</h4>
+        <ul>
+          <li>Petitions should advocate for a real cause, change, or request — not serve as generic chat, advertising, or off-topic content.</li>
+        </ul>
+
+        <h4>Moderation</h4>
+        <p>The platform owner may remove petitions that violate these guidelines, with a reason recorded permanently on-chain. Petition creators may remove their own petitions at any time, for any reason.</p>
+
+        <div class="rules-footer-note">
+          Petitions live permanently on the Base blockchain once created. Removal hides a petition from this interface but the historical record remains on-chain and publicly viewable via a block explorer — this cannot be changed by anyone, including the platform owner.
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:20px">
+        <button class="btn-primary btn-sm" style="flex:1" onclick="closeRulesModal()">Close</button>
       </div>
     </div>
   </div>
@@ -663,6 +729,11 @@
       const category = document.getElementById("newCategory").value;
       const duration = parseInt(document.getElementById("newDuration").value);
 
+      if (!document.getElementById("agreeRules").checked) {
+        showToast("⚠️ Please agree to the Community Guidelines first.", "error");
+        return;
+      }
+
       let goal = selectedGoal;
       if (goal === "custom") {
         goal = parseInt(document.getElementById("newGoalCustom").value);
@@ -695,6 +766,8 @@
         selectedGoal = 0;
         document.querySelectorAll("#goalPicker .goal-chip").forEach(el => el.classList.remove("active"));
         document.querySelector('#goalPicker .goal-chip[data-goal="0"]').classList.add("active");
+        document.getElementById("agreeRules").checked = false;
+        updateCreateBtnState();
         switchTab("browse");
         await loadPetitions();
         await loadStats();
@@ -772,6 +845,25 @@
     function closeRemoveModal() {
       removePetitionId = null;
       document.getElementById("removeModal").classList.remove("show");
+    }
+
+    // ─────────────────────────────────────────
+    // Community Guidelines modal
+    // ─────────────────────────────────────────
+    function openRulesModal(event) {
+      if (event) event.preventDefault();
+      document.getElementById("rulesModal").classList.add("show");
+    }
+    function closeRulesModal() {
+      document.getElementById("rulesModal").classList.remove("show");
+    }
+
+    // The Create button also requires an actual wallet connection (existing
+    // behavior) — this just adds the guidelines checkbox as a second gate.
+    let walletAllowsCreate = false;
+    function updateCreateBtnState() {
+      const agreed = document.getElementById("agreeRules").checked;
+      document.getElementById("createBtn").disabled = !(agreed && walletAllowsCreate);
     }
 
     async function confirmRemove() {
@@ -917,7 +1009,8 @@
       document.getElementById("connectBtn").style.display = "block";
       document.getElementById("connectBtn").textContent = "Connect Wallet";
       document.getElementById("connectBtn").disabled = false;
-      document.getElementById("createBtn").disabled = true;
+      walletAllowsCreate = false;
+      updateCreateBtnState();
 
       showToast("👋 Wallet disconnected", "");
 
@@ -1029,7 +1122,8 @@
         document.getElementById("statusDot").classList.add("on");
         document.getElementById("walletPill").classList.add("connected");
         document.getElementById("connectBtn").style.display = "none";
-        document.getElementById("createBtn").disabled = false;
+        walletAllowsCreate = true;
+        updateCreateBtnState();
 
         showToast("✅ Wallet connected!", "success");
         await loadPetitions();
@@ -1074,7 +1168,8 @@
             document.getElementById("walletPill").classList.remove("connected");
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("connectBtn").textContent = "Connect Wallet";
-            document.getElementById("createBtn").disabled = true;
+            walletAllowsCreate = false;
+            updateCreateBtnState();
           } else {
             walletAddress = accs[0];
             document.getElementById("walletAddress").textContent = short(walletAddress);
