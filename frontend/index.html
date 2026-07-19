@@ -341,11 +341,21 @@
 
   <div class="modal-overlay" id="removeModal">
     <div class="modal">
-      <h3>🚫 Remove Petition</h3>
-      <p>This petition will be marked as removed. Provide a reason (stored on-chain).</p>
-      <div class="form-group">
-        <label class="form-label">Reason</label>
-        <input type="text" id="removeReason" placeholder="e.g. Violates platform rules" />
+      <h3 id="removeModalTitle">Remove Petition</h3>
+      <p id="removeModalDesc">Remove your petition? This can't be undone.</p>
+      <div class="form-group" id="removeReasonGroup" style="display:none">
+        <label class="form-label">Reason <span class="label-optional">(stored on-chain)</span></label>
+        <select id="removeReasonSelect" onchange="handleReasonSelectChange()">
+          <option value="">Select a reason...</option>
+          <option value="Violates platform rules">Violates platform rules</option>
+          <option value="Spam or duplicate petition">Spam or duplicate petition</option>
+          <option value="Misleading or false information">Misleading or false information</option>
+          <option value="Hate speech or harassment">Hate speech or harassment</option>
+          <option value="Illegal content">Illegal content</option>
+          <option value="Requested by creator">Requested by creator</option>
+          <option value="__custom">Other (write custom reason)</option>
+        </select>
+        <input type="text" id="removeReasonCustom" placeholder="Describe the reason..." style="display:none; margin-top:8px;" />
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeRemoveModal()">Cancel</button>
@@ -359,7 +369,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
   <script>
-    const CONTRACT_ADDRESS = "0xCbb2032276703D4B21494c1973c709Ee0ACE1BF2";
+    const CONTRACT_ADDRESS = "0x7F7AE9E9104679d41AA66C17a7a15bECAC5AE44B";
     const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
 
     const ABI = [
@@ -522,7 +532,9 @@
     }
 
     function formatDate(unixTs) {
-      const d = new Date(Number(unixTs) * 1000);
+      const ts = Number(unixTs);
+      if (!ts || ts <= 0) return "date unavailable";
+      const d = new Date(ts * 1000);
       return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
 
@@ -566,7 +578,7 @@
           <div class="petition-desc">${escHtml(p.description)}</div>
           <div class="petition-meta">
             <span class="badge badge-cat">${escHtml(p.category)}</span>
-            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Filed by ${escHtml(short(p.creator))}</a>
+            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Created by ${escHtml(short(p.creator))}</a>
             <span class="deadline-text">· ${formatDate(p.createdAt)}</span>
           </div>
 
@@ -717,16 +729,63 @@
 
     function openRemoveModal(id) {
       removePetitionId = id;
-      document.getElementById("removeReason").value = "";
+      const petition = allPetitionsCache.find(p => Number(p.id) === Number(id));
+      const isOwnerModeratingOther = !!petition
+        && ownerAddress && walletAddress
+        && walletAddress.toLowerCase() === ownerAddress.toLowerCase()
+        && petition.creator.toLowerCase() !== walletAddress.toLowerCase();
+
+      const reasonGroup = document.getElementById("removeReasonGroup");
+      const title = document.getElementById("removeModalTitle");
+      const desc = document.getElementById("removeModalDesc");
+      const select = document.getElementById("removeReasonSelect");
+      const custom = document.getElementById("removeReasonCustom");
+
+      select.value = "";
+      custom.value = "";
+      custom.style.display = "none";
+
+      if (isOwnerModeratingOther) {
+        title.textContent = "Remove Petition (Moderation)";
+        desc.textContent = "You're removing another creator's petition. A reason is required and will be stored on-chain.";
+        reasonGroup.style.display = "block";
+      } else {
+        title.textContent = "Remove Petition";
+        desc.textContent = "Remove your petition? This can't be undone. No reason is required.";
+        reasonGroup.style.display = "none";
+      }
+
       document.getElementById("removeModal").classList.add("show");
     }
+
+    function handleReasonSelectChange() {
+      const select = document.getElementById("removeReasonSelect");
+      const custom = document.getElementById("removeReasonCustom");
+      if (select.value === "__custom") {
+        custom.style.display = "block";
+        custom.focus();
+      } else {
+        custom.style.display = "none";
+      }
+    }
+
     function closeRemoveModal() {
       removePetitionId = null;
       document.getElementById("removeModal").classList.remove("show");
     }
+
     async function confirmRemove() {
-      const reason = document.getElementById("removeReason").value.trim();
-      if (!reason) { showToast("⚠️ Please provide a reason.", "error"); return; }
+      const reasonGroupVisible = document.getElementById("removeReasonGroup").style.display !== "none";
+      let reason = "";
+
+      if (reasonGroupVisible) {
+        const select = document.getElementById("removeReasonSelect");
+        reason = select.value === "__custom"
+          ? document.getElementById("removeReasonCustom").value.trim()
+          : select.value;
+        if (!reason) { showToast("⚠️ Please select or enter a reason.", "error"); return; }
+      }
+
       closeRemoveModal();
       try {
         const tx = await contract.removePetition(removePetitionId, reason);
