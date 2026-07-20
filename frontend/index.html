@@ -46,6 +46,8 @@
     .wallet-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 
     /* ── Theme toggle ── */
+    .nav-link-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 7px; font-family: var(--sans); }
+    .nav-link-btn:hover { color: var(--text); border-color: var(--blue-border); }
     .theme-toggle { display: flex; align-items: center; justify-content: center; width: 38px; height: 22px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
     .network-badge { display: none; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--mono); padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); }
     .network-badge.show { display: flex; }
@@ -245,6 +247,7 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
+      <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
       <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
         <div class="network-dot" id="networkDot"></div>
         <span>Base Sepolia</span>
@@ -299,6 +302,7 @@
           <option value="">All Statuses</option>
           <option value="open">Open</option>
           <option value="closed">Closed</option>
+          <option value="removed">Removed</option>
         </select>
         <select id="sortFilter" onchange="applyFilters()">
           <option value="newest">Newest First</option>
@@ -547,12 +551,30 @@
       );
 
       let filtered = allPetitionsCache.filter(p => {
+        if (status === "removed") {
+          // Explicitly viewing removed petitions — show only those.
+          return p.active === false;
+        }
+        // Default behavior across All/Open/Closed: never show removed petitions.
+        if (!p.active) return false;
+
         if (search && !p.title.toLowerCase().includes(search)) return false;
         if (category && p.category !== category) return false;
-        if (status === "open" && !(p.active && Number(p.deadline) > now)) return false;
-        if (status === "closed" && (p.active && Number(p.deadline) > now)) return false;
+        if (status === "open" && !(Number(p.deadline) > now)) return false;
+        if (status === "closed" && (Number(p.deadline) > now)) return false;
         return true;
       });
+
+      // Direct-link support: if the URL points at a specific removed petition,
+      // include it even though it's normally hidden, so shared links still resolve.
+      const urlParams = new URLSearchParams(window.location.search);
+      const linkedId = urlParams.get("petition");
+      if (linkedId && !filtered.some(p => Number(p.id) === Number(linkedId))) {
+        const linked = allPetitionsCache.find(p => Number(p.id) === Number(linkedId));
+        if (linked && !linked.active && status !== "removed") {
+          filtered = [linked, ...filtered];
+        }
+      }
 
       if (sort === "mostSigned") {
         filtered = [...filtered].sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount));
@@ -560,7 +582,10 @@
       // "newest" is already the natural order from loadPetitions (highest id first)
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>Try a different search or filter.</p></div>`;
+        const emptyMsg = status === "removed"
+          ? `<div class="empty"><div class="empty-icon">🗂️</div><h3>No removed petitions</h3><p>Nothing has been removed from the platform.</p></div>`
+          : `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>Try a different search or filter.</p></div>`;
+        list.innerHTML = emptyMsg;
         return;
       }
 
