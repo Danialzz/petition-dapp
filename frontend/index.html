@@ -93,10 +93,13 @@
     .main { width: 100%; max-width: 1160px; padding: 0 20px; }
 
     /* ── Profile page ── */
+    .back-link { background: none; border: none; color: var(--muted); font-size: 13px; font-family: var(--sans); font-weight: 600; padding: 0; margin-bottom: 18px; cursor: pointer; }
+    .back-link:hover { color: var(--blue); }
     .profile-header { display: flex; flex-direction: column; gap: 20px; }
     .profile-header-top { display: flex; align-items: center; gap: 16px; }
     .profile-avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--blue-dim); border: 1px solid var(--blue-border); color: var(--blue); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 15px; flex-shrink: 0; }
-    .profile-address { font-family: var(--mono); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .profile-display-name { font-family: var(--display); font-size: 19px; font-weight: 600; margin-bottom: 2px; }
+    .profile-address { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 8px; }
     .profile-links { display: flex; gap: 10px; }
     .link-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 6px 12px; border-radius: 8px; }
     .link-btn:hover { color: var(--text); border-color: var(--blue-border); }
@@ -295,7 +298,6 @@
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
       <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
-      <button class="nav-link-btn" id="profileNavBtn" onclick="goToProfile(event)" title="Your profile" style="display:none">My Profile</button>
       <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
         <div class="network-dot" id="networkDot"></div>
         <span>Base Sepolia</span>
@@ -326,13 +328,6 @@
       <path d="M6 22 C 20 6, 32 6, 42 18 S 62 30, 74 16 S 96 4, 110 20 S 132 30, 146 14" />
       <circle class="base-dot" cx="196" cy="16" r="4" />
     </svg>
-  </div>
-
-  <div class="tabs-wrap">
-    <div class="tabs nav-tabs">
-      <button class="tab active" onclick="switchTab('browse')">Browse Petitions</button>
-      <button class="tab" onclick="goToProfile()">My Profile</button>
-    </div>
   </div>
 
   <div class="main">
@@ -386,11 +381,13 @@
     </div>
 
     <div id="tab-profile" style="display:none">
+      <button class="back-link" onclick="switchTab('browse')">← Back to Petitions</button>
       <div class="card profile-header">
         <div class="profile-header-top">
           <div class="profile-avatar" id="profileAvatar">?</div>
           <div>
-            <div class="profile-address" id="profileAddress">Not connected</div>
+            <div class="profile-display-name" id="profileDisplayName">Not connected</div>
+            <div class="profile-address" id="profileAddress"></div>
             <div class="profile-links">
               <button class="link-btn" onclick="copyWalletAddress(event)">Copy Address</button>
               <button class="link-btn" onclick="viewOnExplorer(event)">View on Basescan</button>
@@ -402,6 +399,19 @@
           <div class="profile-stat"><div class="profile-stat-num" id="profileSignedCount">0</div><div class="profile-stat-label">Signed</div></div>
           <div class="profile-stat"><div class="profile-stat-num" id="profileSigsReceived">0</div><div class="profile-stat-label">Signatures received</div></div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Edit Profile</div>
+        <div class="form-group">
+          <label class="form-label">Username <span class="label-optional">(optional, max 32 chars)</span></label>
+          <input type="text" id="profileUsernameInput" placeholder="e.g. danialzz" maxlength="32" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio <span class="label-optional">(optional, max 200 chars)</span></label>
+          <textarea id="profileBioInput" placeholder="Say a bit about yourself or what causes you care about..." maxlength="200" style="min-height:70px"></textarea>
+        </div>
+        <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
       </div>
 
       <div class="card">
@@ -569,9 +579,24 @@
     // Read-only connection to Base Sepolia's public RPC — lets anyone browse
     // petitions without connecting a wallet. Only signing/creating/removing
     // requires an actual connected wallet (see connectWithWallet()).
+    // Separate, standalone contract for optional username/bio profiles.
+    // Deploy independently — deploying or redeploying this NEVER touches
+    // PetitionPlatform or any existing petition data.
+    const PROFILE_CONTRACT_ADDRESS = "YOUR_PROFILE_CONTRACT_ADDRESS_HERE";
+    const PROFILE_ABI = [
+      "function setProfile(string,string) external",
+      "function getProfile(address) external view returns (string username, string bio, bool exists, uint256 updatedAt)"
+    ];
+
+    let profileContract, profileReadContract;
+    const profileNameCache = {}; // lowercased address -> username string | null (fetched, none set) | undefined (not fetched yet)
+
     function initReadOnlyContract() {
       readOnlyProvider = new ethers.JsonRpcProvider("https://sepolia.base.org");
       readContract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, readOnlyProvider);
+      if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
+        profileReadContract = new ethers.Contract(ethers.getAddress(PROFILE_CONTRACT_ADDRESS), PROFILE_ABI, readOnlyProvider);
+      }
     }
     initReadOnlyContract();
 
@@ -770,7 +795,7 @@
           <div class="petition-desc">${escHtml(p.description)}</div>
           <div class="petition-meta">
             <span class="badge badge-cat">${escHtml(p.category)}</span>
-            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Created by ${escHtml(short(p.creator))}</a>
+            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a>
             <span class="deadline-text">· ${formatDate(p.createdAt)}</span>
           </div>
 
@@ -1051,13 +1076,102 @@
       } catch {}
     }
 
+    async function getProfileName(address) {
+      if (!address) return null;
+      const key = address.toLowerCase();
+      if (key in profileNameCache) return profileNameCache[key];
+      if (!profileReadContract) { profileNameCache[key] = null; return null; }
+      try {
+        const res = await profileReadContract.getProfile(address);
+        const name = res.exists && res.username && res.username.trim() ? res.username.trim() : null;
+        profileNameCache[key] = name;
+        return name;
+      } catch {
+        profileNameCache[key] = null;
+        return null;
+      }
+    }
+
+    // Progressive enhancement: swap "0x1234...abcd" for a real username on any
+    // rendered creator link, once/if that wallet has one set. Cards already
+    // show the short address immediately, so this never blocks anything.
+    async function resolveCreatorNames(root) {
+      if (!profileReadContract) return;
+      const nodes = (root || document).querySelectorAll(".creator-name[data-addr]");
+      const seen = new Set();
+      for (const node of nodes) {
+        const addr = node.getAttribute("data-addr");
+        if (!addr || seen.has(addr)) continue;
+        seen.add(addr);
+        const name = await getProfileName(addr);
+        if (name) {
+          (root || document).querySelectorAll(`.creator-name[data-addr="${addr}"]`).forEach(el => {
+            el.textContent = "@" + name;
+          });
+        }
+      }
+    }
+
+    async function loadMyProfileInfo() {
+      if (!walletAddress) return;
+      const nameEl = document.getElementById("profileDisplayName");
+      const usernameInput = document.getElementById("profileUsernameInput");
+      const bioInput = document.getElementById("profileBioInput");
+      if (!profileReadContract) {
+        if (nameEl) nameEl.textContent = short(walletAddress);
+        return;
+      }
+      try {
+        const res = await profileReadContract.getProfile(walletAddress);
+        const username = res.exists && res.username ? res.username : "";
+        const bio = res.exists && res.bio ? res.bio : "";
+        if (nameEl) nameEl.textContent = username ? "@" + username : short(walletAddress);
+        if (usernameInput && document.activeElement !== usernameInput) usernameInput.value = username;
+        if (bioInput && document.activeElement !== bioInput) bioInput.value = bio;
+        profileNameCache[walletAddress.toLowerCase()] = username || null;
+      } catch (err) {
+        if (nameEl) nameEl.textContent = short(walletAddress);
+      }
+    }
+
+    async function saveProfile() {
+      const usernameInput = document.getElementById("profileUsernameInput");
+      const bioInput = document.getElementById("profileBioInput");
+      const btn = document.getElementById("saveProfileBtn");
+      const username = usernameInput.value.trim();
+      const bio = bioInput.value.trim();
+
+      if (username.length > 32) { showToast("⚠️ Username too long (max 32 chars).", "error"); return; }
+      if (bio.length > 200) { showToast("⚠️ Bio too long (max 200 chars).", "error"); return; }
+      if (!profileContract) {
+        showToast(PROFILE_CONTRACT_ADDRESS === "YOUR_PROFILE_CONTRACT_ADDRESS_HERE"
+          ? "⚠️ Profile contract not deployed yet."
+          : "⚠️ Connect your wallet first.", "error");
+        return;
+      }
+
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+      btn.disabled = true;
+      try {
+        const tx = await profileContract.setProfile(username, bio);
+        showToast("⏳ Saving profile — confirming...", "");
+        await tx.wait();
+        showToast("✅ Profile saved!", "success");
+        profileNameCache[walletAddress.toLowerCase()] = username || null;
+        await loadMyProfileInfo();
+      } catch (err) {
+        showToast("❌ " + (err.reason || err.message || "Failed to save profile"), "error");
+      } finally {
+        btn.textContent = "Save Profile";
+        btn.disabled = false;
+      }
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       document.getElementById("tab-browse").style.display = tab === "browse" ? "block" : "none";
       document.getElementById("tab-profile").style.display = tab === "profile" ? "block" : "none";
-      document.querySelectorAll(".tab").forEach((el, i) => {
-        el.classList.toggle("active", (i === 0 && tab === "browse") || (i === 1 && tab === "profile"));
-      });
+      if (tab === "profile") window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function goToProfile(event) {
@@ -1095,11 +1209,15 @@
       createdList.innerHTML = mine.length
         ? mine.map(p => renderPetition(p, now, false)).join("")
         : '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Create your first one above.</p></div>';
+      resolveCreatorNames(createdList);
 
       const signedList = document.getElementById("profileSignedList");
       signedList.innerHTML = signedByMe.length
         ? signedByMe.map(p => renderPetition(p, now, false)).join("")
         : '<div class="empty"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>Sign a petition from Browse to see it here.</p></div>';
+      resolveCreatorNames(signedList);
+
+      loadMyProfileInfo();
     }
 
     function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
@@ -1169,6 +1287,7 @@
       provider = null;
       signer = null;
       contract = null;
+      profileContract = null;
 
       document.getElementById("walletAddress").textContent = "Not connected";
       document.getElementById("statusDot").classList.remove("on");
@@ -1177,7 +1296,6 @@
       document.getElementById("connectBtn").style.display = "block";
       document.getElementById("connectBtn").textContent = "Connect Wallet";
       document.getElementById("connectBtn").disabled = false;
-      document.getElementById("profileNavBtn").style.display = "none";
       if (currentTab === "profile") switchTab("browse");
       walletAllowsCreate = false;
       updateCreateBtnState();
@@ -1286,13 +1404,15 @@
         signer = await provider.getSigner();
         walletAddress = accounts[0];
         contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
+        if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
+          profileContract = new ethers.Contract(ethers.getAddress(PROFILE_CONTRACT_ADDRESS), PROFILE_ABI, signer);
+        }
         ownerAddress = await contract.owner();
 
         document.getElementById("walletAddress").textContent = short(walletAddress);
         document.getElementById("statusDot").classList.add("on");
         document.getElementById("walletPill").classList.add("connected");
         document.getElementById("connectBtn").style.display = "none";
-        document.getElementById("profileNavBtn").style.display = "inline-flex";
         walletAllowsCreate = true;
         updateCreateBtnState();
 
@@ -1339,7 +1459,6 @@
             document.getElementById("walletPill").classList.remove("connected");
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("connectBtn").textContent = "Connect Wallet";
-            document.getElementById("profileNavBtn").style.display = "none";
             if (currentTab === "profile") switchTab("browse");
             walletAllowsCreate = false;
             updateCreateBtnState();
@@ -1408,6 +1527,7 @@
       applyFilters = function () {
         _origApplyFilters();
         renderCategoryChart();
+        resolveCreatorNames(document.getElementById("petitionList"));
         if (walletAddress) renderProfile();
       };
     }
