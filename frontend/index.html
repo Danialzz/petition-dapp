@@ -91,6 +91,22 @@
 
     /* ── Two-column browse layout (BaseDex-style: main card + side stats/chart) ── */
     .main { width: 100%; max-width: 1160px; padding: 0 20px; }
+
+    /* ── Profile page ── */
+    .profile-header { display: flex; flex-direction: column; gap: 20px; }
+    .profile-header-top { display: flex; align-items: center; gap: 16px; }
+    .profile-avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--blue-dim); border: 1px solid var(--blue-border); color: var(--blue); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 15px; flex-shrink: 0; }
+    .profile-address { font-family: var(--mono); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .profile-links { display: flex; gap: 10px; }
+    .link-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 6px 12px; border-radius: 8px; }
+    .link-btn:hover { color: var(--text); border-color: var(--blue-border); }
+    .profile-stats { display: flex; gap: 12px; border-top: 1px solid var(--border); padding-top: 18px; }
+    .profile-stat { flex: 1; text-align: center; }
+    .profile-stat-num { font-family: var(--display); font-size: 24px; font-weight: 600; color: var(--blue); }
+    .profile-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px; }
+    .profile-section { margin-top: 8px; }
+    .profile-section-title { font-family: var(--display); font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+    @media (max-width: 480px) { .profile-header-top { flex-wrap: wrap; } }
     .browse-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
     .browse-main { min-width: 0; }
     .browse-side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 90px; }
@@ -279,6 +295,7 @@
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
       <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
+      <button class="nav-link-btn" id="profileNavBtn" onclick="goToProfile(event)" title="Your profile" style="display:none">My Profile</button>
       <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
         <div class="network-dot" id="networkDot"></div>
         <span>Base Sepolia</span>
@@ -290,6 +307,7 @@
         <div class="status-dot" id="statusDot"></div>
         <span id="walletAddress">Not connected</span>
         <div class="wallet-dropdown" id="walletDropdown">
+          <button onclick="goToProfile(event)">👤 My Profile</button>
           <button onclick="copyWalletAddress(event)">📋 Copy Address</button>
           <button onclick="viewOnExplorer(event)">🔍 View on Basescan</button>
           <hr>
@@ -313,7 +331,7 @@
   <div class="tabs-wrap">
     <div class="tabs nav-tabs">
       <button class="tab active" onclick="switchTab('browse')">Browse Petitions</button>
-      <button class="tab" onclick="switchTab('create')">Create Petition</button>
+      <button class="tab" onclick="goToProfile()">My Profile</button>
     </div>
   </div>
 
@@ -367,7 +385,25 @@
       </div>
     </div>
 
-    <div id="tab-create" style="display:none">
+    <div id="tab-profile" style="display:none">
+      <div class="card profile-header">
+        <div class="profile-header-top">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <div>
+            <div class="profile-address" id="profileAddress">Not connected</div>
+            <div class="profile-links">
+              <button class="link-btn" onclick="copyWalletAddress(event)">Copy Address</button>
+              <button class="link-btn" onclick="viewOnExplorer(event)">View on Basescan</button>
+            </div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-num" id="profileCreatedCount">0</div><div class="profile-stat-label">Created</div></div>
+          <div class="profile-stat"><div class="profile-stat-num" id="profileSignedCount">0</div><div class="profile-stat-label">Signed</div></div>
+          <div class="profile-stat"><div class="profile-stat-num" id="profileSigsReceived">0</div><div class="profile-stat-label">Signatures received</div></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Start a New Petition</div>
         <div class="form-group">
@@ -412,6 +448,16 @@
           <span>I agree to the <a href="#" onclick="openRulesModal(event)">Community Guidelines</a> and confirm this petition doesn't violate them.</span>
         </label>
         <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Your Petitions</div>
+        <div id="profileCreatedList"><div class="loading-state">Connect your wallet to see your petitions.</div></div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Petitions You've Signed</div>
+        <div id="profileSignedList"><div class="loading-state">Connect your wallet to see what you've signed.</div></div>
       </div>
     </div>
   </div>
@@ -848,7 +894,7 @@
         document.querySelector('#goalPicker .goal-chip[data-goal="0"]').classList.add("active");
         document.getElementById("agreeRules").checked = false;
         updateCreateBtnState();
-        switchTab("browse");
+        switchTab("profile");
         await loadPetitions();
         await loadStats();
       } catch (err) {
@@ -1008,10 +1054,52 @@
     function switchTab(tab) {
       currentTab = tab;
       document.getElementById("tab-browse").style.display = tab === "browse" ? "block" : "none";
-      document.getElementById("tab-create").style.display = tab === "create" ? "block" : "none";
+      document.getElementById("tab-profile").style.display = tab === "profile" ? "block" : "none";
       document.querySelectorAll(".tab").forEach((el, i) => {
-        el.classList.toggle("active", (i === 0 && tab === "browse") || (i === 1 && tab === "create"));
+        el.classList.toggle("active", (i === 0 && tab === "browse") || (i === 1 && tab === "profile"));
       });
+    }
+
+    function goToProfile(event) {
+      if (event) event.stopPropagation();
+      const dropdown = document.getElementById("walletDropdown");
+      if (dropdown) dropdown.classList.remove("show");
+      if (!walletAddress) {
+        showToast("Connect your wallet to view your profile.", "");
+        openWalletModal();
+        return;
+      }
+      switchTab("profile");
+      renderProfile();
+    }
+
+    function renderProfile() {
+      if (!walletAddress) return;
+      const addrEl = document.getElementById("profileAddress");
+      const avatarEl = document.getElementById("profileAvatar");
+      if (!addrEl || !avatarEl) return;
+
+      addrEl.textContent = short(walletAddress);
+      avatarEl.textContent = walletAddress.slice(2, 4).toUpperCase();
+
+      const now = Math.floor(Date.now() / 1000);
+      const mine = allPetitionsCache.filter(p => p.creator && p.creator.toLowerCase() === walletAddress.toLowerCase());
+      const signedByMe = allPetitionsCache.filter(p => p.signed);
+      const sigsReceived = mine.reduce((sum, p) => sum + Number(p.signatureCount), 0);
+
+      document.getElementById("profileCreatedCount").textContent = mine.length;
+      document.getElementById("profileSignedCount").textContent = signedByMe.length;
+      document.getElementById("profileSigsReceived").textContent = sigsReceived.toLocaleString();
+
+      const createdList = document.getElementById("profileCreatedList");
+      createdList.innerHTML = mine.length
+        ? mine.map(p => renderPetition(p, now, false)).join("")
+        : '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Create your first one above.</p></div>';
+
+      const signedList = document.getElementById("profileSignedList");
+      signedList.innerHTML = signedByMe.length
+        ? signedByMe.map(p => renderPetition(p, now, false)).join("")
+        : '<div class="empty"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>Sign a petition from Browse to see it here.</p></div>';
     }
 
     function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
@@ -1089,6 +1177,8 @@
       document.getElementById("connectBtn").style.display = "block";
       document.getElementById("connectBtn").textContent = "Connect Wallet";
       document.getElementById("connectBtn").disabled = false;
+      document.getElementById("profileNavBtn").style.display = "none";
+      if (currentTab === "profile") switchTab("browse");
       walletAllowsCreate = false;
       updateCreateBtnState();
 
@@ -1202,6 +1292,7 @@
         document.getElementById("statusDot").classList.add("on");
         document.getElementById("walletPill").classList.add("connected");
         document.getElementById("connectBtn").style.display = "none";
+        document.getElementById("profileNavBtn").style.display = "inline-flex";
         walletAllowsCreate = true;
         updateCreateBtnState();
 
@@ -1248,6 +1339,8 @@
             document.getElementById("walletPill").classList.remove("connected");
             document.getElementById("connectBtn").style.display = "block";
             document.getElementById("connectBtn").textContent = "Connect Wallet";
+            document.getElementById("profileNavBtn").style.display = "none";
+            if (currentTab === "profile") switchTab("browse");
             walletAllowsCreate = false;
             updateCreateBtnState();
           } else {
@@ -1315,6 +1408,7 @@
       applyFilters = function () {
         _origApplyFilters();
         renderCategoryChart();
+        if (walletAddress) renderProfile();
       };
     }
   </script>
