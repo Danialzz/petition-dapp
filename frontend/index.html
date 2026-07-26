@@ -165,6 +165,19 @@
     .agree-row a:hover { border-bottom-style: solid; }
 
     .rules-modal .modal { max-width: 560px; max-height: 80vh; overflow-y: auto; }
+    .detail-modal { max-width: 620px; max-height: 84vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 18px; right: 18px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); width: 30px; height: 30px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 2; }
+    .modal-close:hover { color: var(--text); border-color: var(--blue-border); }
+    .detail-title { font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.2; margin: 4px 40px 12px 0; }
+    .detail-desc { font-size: 14px; color: var(--text); line-height: 1.65; white-space: pre-wrap; margin-bottom: 18px; }
+    .detail-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+    .detail-meta-item { font-size: 13px; }
+    .detail-meta-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 3px; }
+    .detail-meta-value { color: var(--text); }
+    .detail-meta-value a { color: var(--blue); text-decoration: none; }
+    .detail-meta-value a:hover { text-decoration: underline; }
+    .detail-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    @media (max-width: 480px) { .detail-meta-grid { grid-template-columns: 1fr; } }
     .rules-body { font-size: 14px; color: var(--muted); line-height: 1.65; }
     .rules-body h4 { font-family: var(--display); font-size: 14px; color: var(--text); margin: 18px 0 6px; font-weight: 600; }
     .rules-body h4:first-child { margin-top: 0; }
@@ -199,7 +212,13 @@
     .btn-remove:hover { border-color: var(--error); background: rgba(240,80,107,0.06); }
 
     /* ── Petition cards — signature "tally" edge ── */
-    .petition-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 22px 22px 26px; margin-bottom: 12px; transition: border-color 0.15s; overflow: hidden; }
+    .petition-card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 22px 22px 26px; margin-bottom: 12px; transition: border-color 0.15s; overflow: hidden; cursor: pointer; }
+
+    .cta-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, var(--blue-dim), transparent); border: 1px solid var(--blue-border); border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; flex-wrap: wrap; }
+    .cta-title { font-family: var(--display); font-size: 15px; font-weight: 600; }
+    .cta-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .cta-banner .btn-primary { width: auto; margin-top: 0; white-space: nowrap; }
+    @media (max-width: 480px) { .cta-banner { flex-direction: column; align-items: stretch; } .cta-banner .btn-primary { width: 100%; } }
     .petition-card::before {
       content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
       background: var(--tally-fill, var(--border)); transition: background 0.2s;
@@ -334,6 +353,13 @@
     <div id="tab-browse">
       <div class="browse-grid">
         <div class="browse-main">
+          <div class="cta-banner">
+            <div>
+              <div class="cta-title">Have a cause worth signing?</div>
+              <div class="cta-sub">Every wallet gets its own space to create and manage petitions.</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="goToProfile(event)">Create a Petition →</button>
+          </div>
           <div class="filter-bar">
             <input type="text" id="searchInput" placeholder="Search petitions by title..." oninput="applyFilters()" />
             <select id="categoryFilter" onchange="applyFilters()">
@@ -545,6 +571,13 @@
     </div>
   </div>
 
+  <div class="modal-overlay detail-overlay" id="detailModal" onclick="if(event.target===this) closeDetailModal()">
+    <div class="modal detail-modal">
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -625,7 +658,7 @@
         const total = Number(await activeContract.getTotalPetitions());
         if (total === 0) {
           allPetitionsCache = [];
-          list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first to create one!</p></div>';
+          list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first — <a href="#" onclick="goToProfile(event)">create one from your profile</a>.</p></div>';
           return;
         }
         const petitions = [];
@@ -787,7 +820,7 @@
       const shareUrl = `${window.location.origin}${window.location.pathname}?petition=${id}`;
 
       return `
-        <div class="petition-card ${!p.active ? 'removed' : ''}" id="petition-${id}" style="--tally-fill:${tallyColor}">
+        <div class="petition-card ${!p.active ? 'removed' : ''}" id="petition-${id}" style="--tally-fill:${tallyColor}" onclick="handleCardClick(event, ${id})">
           <div class="petition-header">
             <div class="petition-title">${escHtml(p.title)}</div>
             <div class="badge-group">${trendingBadge}${statusBadge}</div>
@@ -835,6 +868,120 @@
       }
 
       panel.innerHTML = `<div class="loading-state" style="padding:14px 0"><span class="spinner"></span> Loading signers...</div>`;
+      try {
+        const activeContract = contract || readContract;
+        const signers = await activeContract.getSigners(id);
+        const html = signers.length === 0
+          ? `<div class="signer-empty">No signatures yet.</div>`
+          : `<div class="signer-grid">${signers.map(a => `<a href="https://sepolia.basescan.org/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
+        signerListCache.set(id, html);
+        panel.innerHTML = html;
+      } catch (err) {
+        panel.innerHTML = `<div class="signer-empty">Couldn't load signers.</div>`;
+      }
+    }
+
+    // ─────────────────────────────────────────
+    // Petition detail modal — click any card to read the full petition.
+    // Buttons/links inside the card still work normally; only a click on
+    // the card's empty space opens the modal.
+    // ─────────────────────────────────────────
+    let currentDetailId = null;
+
+    function handleCardClick(event, id) {
+      if (event.target.closest("button, a, input, select, textarea")) return;
+      openPetitionDetail(id);
+    }
+
+    function openPetitionDetail(id) {
+      const p = allPetitionsCache.find(x => Number(x.id) === Number(id));
+      if (!p) return;
+      currentDetailId = Number(id);
+      const now = Math.floor(Date.now() / 1000);
+      const body = document.getElementById("detailModalBody");
+      body.innerHTML = buildDetailHtml(p, now);
+      document.getElementById("detailModal").classList.add("show");
+      resolveCreatorNames(body);
+      loadDetailSigners(id);
+    }
+
+    function closeDetailModal() {
+      currentDetailId = null;
+      document.getElementById("detailModal").classList.remove("show");
+    }
+
+    function buildDetailHtml(p, now) {
+      const id = Number(p.id);
+      const deadline = Number(p.deadline);
+      const isOpen = p.active && deadline > now;
+      const isOwner = !!walletAddress && !!ownerAddress && walletAddress.toLowerCase() === ownerAddress.toLowerCase();
+      const isCreator = !!walletAddress && walletAddress.toLowerCase() === p.creator.toLowerCase();
+      const canRemove = isOwner || isCreator;
+      const sigCount = Number(p.signatureCount);
+      const sigGoal = Number(p.signatureGoal || 0);
+      const progress = getProgressInfo(sigCount, sigGoal);
+      const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
+
+      let statusBadge = isOpen
+        ? `<span class="badge badge-open">● Open · ${Math.ceil((deadline - now) / 86400)}d left</span>`
+        : p.active ? `<span class="badge badge-closed">Closed</span>` : `<span class="badge badge-removed">Removed</span>`;
+
+      let actionBtn = "";
+      if (!p.active) actionBtn = `<button class="btn-sm btn-closed" disabled>Removed</button>`;
+      else if (!isOpen) actionBtn = `<button class="btn-sm btn-closed" disabled>Closed</button>`;
+      else if (p.signed) actionBtn = `<button class="btn-sm btn-signed" disabled>Signed</button>`;
+      else actionBtn = `<button class="btn-sm btn-sign" onclick="signPetition(${id})">Sign this petition</button>`;
+
+      let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
+
+      return `
+        <div class="badge-group" style="margin-bottom:8px">${statusBadge}<span class="badge badge-cat">${escHtml(p.category)}</span></div>
+        <div class="detail-title">${escHtml(p.title)}</div>
+        <div class="detail-desc">${escHtml(p.description)}</div>
+
+        <div class="progress-row" style="margin-bottom:0">
+          <div class="progress-track"><div class="progress-fill ${progress.reached ? 'reached' : ''}" style="width:${progress.pct}%"></div></div>
+          <span class="progress-label">
+            ${progress.reached ? '🎉 Goal reached — ' : ''}${sigCount.toLocaleString()} / ${progress.target.toLocaleString()}${!progress.isRealGoal ? ' <span class="progress-auto">(auto)</span>' : ''}
+          </span>
+        </div>
+
+        <div class="detail-meta-grid">
+          <div class="detail-meta-item">
+            <div class="detail-meta-label">Created by</div>
+            <div class="detail-meta-value"><a href="${explorerUrl}" target="_blank" rel="noopener">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a></div>
+          </div>
+          <div class="detail-meta-item">
+            <div class="detail-meta-label">Created on</div>
+            <div class="detail-meta-value">${formatDate(p.createdAt)}</div>
+          </div>
+          <div class="detail-meta-item">
+            <div class="detail-meta-label">Deadline</div>
+            <div class="detail-meta-value">${formatDate(deadline)}</div>
+          </div>
+          <div class="detail-meta-item">
+            <div class="detail-meta-label">Petition ID</div>
+            <div class="detail-meta-value">#${id}</div>
+          </div>
+        </div>
+
+        <div class="detail-footer">
+          <div style="display:flex; gap:8px;">
+            ${removeBtn}
+            <button class="icon-btn" onclick="sharePetition(${id}, event)" title="Copy link">🔗 Share</button>
+          </div>
+          ${actionBtn}
+        </div>
+
+        <div class="profile-section-title" style="margin-top:22px; font-size:13px;">Signatures</div>
+        <div id="detailSigners-${id}"><div class="loading-state" style="padding:10px 0"><span class="spinner"></span> Loading signers...</div></div>
+      `;
+    }
+
+    async function loadDetailSigners(id) {
+      const panel = document.getElementById(`detailSigners-${id}`);
+      if (!panel) return;
+      if (signerListCache.has(id)) { panel.innerHTML = signerListCache.get(id); return; }
       try {
         const activeContract = contract || readContract;
         const signers = await activeContract.getSigners(id);
@@ -1529,6 +1676,14 @@
         renderCategoryChart();
         resolveCreatorNames(document.getElementById("petitionList"));
         if (walletAddress) renderProfile();
+        if (currentDetailId !== null) {
+          const p = allPetitionsCache.find(x => Number(x.id) === currentDetailId);
+          if (p) {
+            const body = document.getElementById("detailModalBody");
+            body.innerHTML = buildDetailHtml(p, Math.floor(Date.now() / 1000));
+            resolveCreatorNames(body);
+          }
+        }
       };
     }
   </script>
