@@ -95,6 +95,30 @@
     /* ── Profile page ── */
     .back-link { background: none; border: none; color: var(--muted); font-size: 13px; font-family: var(--sans); font-weight: 600; padding: 0; margin-bottom: 18px; cursor: pointer; }
     .back-link:hover { color: var(--blue); }
+    .profile-grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+    .profile-left { display: flex; flex-direction: column; gap: 16px; }
+    .profile-right { min-width: 0; }
+    .profile-right-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .profile-right-header .btn-primary { width: auto; margin-top: 0; white-space: nowrap; }
+    @media (max-width: 860px) { .profile-grid { grid-template-columns: 1fr; } }
+
+    .edit-profile-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .chevron { color: var(--muted); font-size: 13px; transition: transform 0.15s; }
+
+    .profile-list-scroll { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
+    .profile-list-scroll:last-child { margin-bottom: 0; }
+    .petition-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+    .petition-row:last-child { border-bottom: none; }
+    .petition-row:hover { background: var(--surface-2); }
+    .row-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+    .row-status-dot.open { background: var(--success); }
+    .row-status-dot.removed { background: var(--error); }
+    .row-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-badge { flex-shrink: 0; }
+    .row-sig { font-size: 12px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+
+    .create-modal { max-width: 560px; max-height: 86vh; overflow-y: auto; position: relative; }
+
     .profile-header { display: flex; flex-direction: column; gap: 20px; }
     .profile-header-top { display: flex; align-items: center; gap: 16px; }
     .profile-avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--blue-dim); border: 1px solid var(--blue-border); color: var(--blue); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 15px; flex-shrink: 0; }
@@ -408,93 +432,107 @@
 
     <div id="tab-profile" style="display:none">
       <button class="back-link" onclick="switchTab('browse')">← Back to Petitions</button>
-      <div class="card profile-header">
-        <div class="profile-header-top">
-          <div class="profile-avatar" id="profileAvatar">?</div>
-          <div>
-            <div class="profile-display-name" id="profileDisplayName">Not connected</div>
-            <div class="profile-address" id="profileAddress"></div>
-            <div class="profile-links">
-              <button class="link-btn" onclick="copyWalletAddress(event)">Copy Address</button>
-              <button class="link-btn" onclick="viewOnExplorer(event)">View on Basescan</button>
+
+      <div class="profile-grid">
+        <div class="profile-left">
+          <div class="card profile-header">
+            <div class="profile-header-top">
+              <div class="profile-avatar" id="profileAvatar">?</div>
+              <div>
+                <div class="profile-display-name" id="profileDisplayName">Not connected</div>
+                <div class="profile-address" id="profileAddress"></div>
+                <div class="profile-links">
+                  <button class="link-btn" onclick="copyWalletAddress(event)">Copy Address</button>
+                  <button class="link-btn" onclick="viewOnExplorer(event)">View on Basescan</button>
+                </div>
+              </div>
+            </div>
+            <div class="profile-stats">
+              <div class="profile-stat"><div class="profile-stat-num" id="profileCreatedCount">0</div><div class="profile-stat-label">Created</div></div>
+              <div class="profile-stat"><div class="profile-stat-num" id="profileSignedCount">0</div><div class="profile-stat-label">Signed</div></div>
+              <div class="profile-stat"><div class="profile-stat-num" id="profileSigsReceived">0</div><div class="profile-stat-label">Signatures received</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="edit-profile-toggle" onclick="toggleEditProfile()">
+              <span class="card-title" style="margin-bottom:0">Profile Details</span>
+              <span class="chevron" id="editProfileChevron">▾</span>
+            </div>
+            <div id="editProfileBody" style="display:none; margin-top:16px;">
+              <div class="form-group">
+                <label class="form-label">Username <span class="label-optional">(optional, max 32 chars)</span></label>
+                <input type="text" id="profileUsernameInput" placeholder="e.g. danialzz" maxlength="32" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bio <span class="label-optional">(optional, max 200 chars)</span></label>
+                <textarea id="profileBioInput" placeholder="Say a bit about yourself or what causes you care about..." maxlength="200" style="min-height:70px"></textarea>
+              </div>
+              <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
             </div>
           </div>
         </div>
-        <div class="profile-stats">
-          <div class="profile-stat"><div class="profile-stat-num" id="profileCreatedCount">0</div><div class="profile-stat-label">Created</div></div>
-          <div class="profile-stat"><div class="profile-stat-num" id="profileSignedCount">0</div><div class="profile-stat-label">Signed</div></div>
-          <div class="profile-stat"><div class="profile-stat-num" id="profileSigsReceived">0</div><div class="profile-stat-label">Signatures received</div></div>
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-title">Edit Profile</div>
-        <div class="form-group">
-          <label class="form-label">Username <span class="label-optional">(optional, max 32 chars)</span></label>
-          <input type="text" id="profileUsernameInput" placeholder="e.g. danialzz" maxlength="32" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Bio <span class="label-optional">(optional, max 200 chars)</span></label>
-          <textarea id="profileBioInput" placeholder="Say a bit about yourself or what causes you care about..." maxlength="200" style="min-height:70px"></textarea>
-        </div>
-        <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Start a New Petition</div>
-        <div class="form-group">
-          <label class="form-label">Title</label>
-          <input type="text" id="newTitle" placeholder="Short, clear title (max 100 chars)" maxlength="100" oninput="updateCount('newTitle','titleCount',100)" />
-          <div class="char-count" id="titleCount">0 / 100</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea id="newDesc" placeholder="Explain your cause clearly (max 1000 chars)" maxlength="1000" oninput="updateCount('newDesc','descCount',1000)"></textarea>
-          <div class="char-count" id="descCount">0 / 1000</div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Category</label>
-            <select id="newCategory">
-              <option value="">Select category...</option>
-              <option>Environment</option><option>Human Rights</option><option>Animal Welfare</option>
-              <option>Education</option><option>Healthcare</option><option>Politics</option>
-              <option>Technology</option><option>Community</option><option>Other</option>
-            </select>
+        <div class="profile-right">
+          <div class="profile-right-header">
+            <div class="profile-section-title" style="margin:0">Your Petitions</div>
+            <button class="btn-primary btn-sm" onclick="openCreateModal()">+ New Petition</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">Duration (days)</label>
-            <input type="number" id="newDuration" placeholder="e.g. 30" min="1" max="365" />
-          </div>
+          <div class="profile-list-scroll" id="profileCreatedList"><div class="loading-state">Connect your wallet to see your petitions.</div></div>
+
+          <div class="profile-section-title">Petitions You've Signed</div>
+          <div class="profile-list-scroll" id="profileSignedList"><div class="loading-state">Connect your wallet to see what you've signed.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="createModal" onclick="if(event.target===this) closeCreateModal()">
+    <div class="modal create-modal">
+      <button class="modal-close" onclick="closeCreateModal()">✕</button>
+      <div class="card-title">Start a New Petition</div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" id="newTitle" placeholder="Short, clear title (max 100 chars)" maxlength="100" oninput="updateCount('newTitle','titleCount',100)" />
+        <div class="char-count" id="titleCount">0 / 100</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="newDesc" placeholder="Explain your cause clearly (max 1000 chars)" maxlength="1000" oninput="updateCount('newDesc','descCount',1000)"></textarea>
+        <div class="char-count" id="descCount">0 / 1000</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="newCategory">
+            <option value="">Select category...</option>
+            <option>Environment</option><option>Human Rights</option><option>Animal Welfare</option>
+            <option>Education</option><option>Healthcare</option><option>Politics</option>
+            <option>Technology</option><option>Community</option><option>Other</option>
+          </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Signature Target <span class="label-optional">(optional)</span></label>
-          <div class="goal-picker" id="goalPicker">
-            <button type="button" class="goal-chip active" data-goal="0" onclick="selectGoal(0, this)">No target</button>
-            <button type="button" class="goal-chip" data-goal="10" onclick="selectGoal(10, this)">10</button>
-            <button type="button" class="goal-chip" data-goal="100" onclick="selectGoal(100, this)">100</button>
-            <button type="button" class="goal-chip" data-goal="1000" onclick="selectGoal(1000, this)">1,000</button>
-            <button type="button" class="goal-chip" data-goal="10000" onclick="selectGoal(10000, this)">10,000</button>
-            <button type="button" class="goal-chip" data-goal="custom" onclick="selectGoal('custom', this)">Custom</button>
-          </div>
-          <input type="number" id="newGoalCustom" placeholder="Enter a custom target..." min="1" max="10000000" style="display:none; margin-top:8px;" />
+          <label class="form-label">Duration (days)</label>
+          <input type="number" id="newDuration" placeholder="e.g. 30" min="1" max="365" />
         </div>
-        <label class="agree-row">
-          <input type="checkbox" id="agreeRules" onchange="updateCreateBtnState()" />
-          <span>I agree to the <a href="#" onclick="openRulesModal(event)">Community Guidelines</a> and confirm this petition doesn't violate them.</span>
-        </label>
-        <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
       </div>
-
-      <div class="profile-section">
-        <div class="profile-section-title">Your Petitions</div>
-        <div id="profileCreatedList"><div class="loading-state">Connect your wallet to see your petitions.</div></div>
+      <div class="form-group">
+        <label class="form-label">Signature Target <span class="label-optional">(optional)</span></label>
+        <div class="goal-picker" id="goalPicker">
+          <button type="button" class="goal-chip active" data-goal="0" onclick="selectGoal(0, this)">No target</button>
+          <button type="button" class="goal-chip" data-goal="10" onclick="selectGoal(10, this)">10</button>
+          <button type="button" class="goal-chip" data-goal="100" onclick="selectGoal(100, this)">100</button>
+          <button type="button" class="goal-chip" data-goal="1000" onclick="selectGoal(1000, this)">1,000</button>
+          <button type="button" class="goal-chip" data-goal="10000" onclick="selectGoal(10000, this)">10,000</button>
+          <button type="button" class="goal-chip" data-goal="custom" onclick="selectGoal('custom', this)">Custom</button>
+        </div>
+        <input type="number" id="newGoalCustom" placeholder="Enter a custom target..." min="1" max="10000000" style="display:none; margin-top:8px;" />
       </div>
-
-      <div class="profile-section">
-        <div class="profile-section-title">Petitions You've Signed</div>
-        <div id="profileSignedList"><div class="loading-state">Connect your wallet to see what you've signed.</div></div>
-      </div>
+      <label class="agree-row">
+        <input type="checkbox" id="agreeRules" onchange="updateCreateBtnState()" />
+        <span>I agree to the <a href="#" onclick="openRulesModal(event)">Community Guidelines</a> and confirm this petition doesn't violate them.</span>
+      </label>
+      <button class="btn-primary" id="createBtn" onclick="createPetition()" disabled>Create Petition on Base</button>
     </div>
   </div>
 
@@ -1066,7 +1104,7 @@
         document.querySelector('#goalPicker .goal-chip[data-goal="0"]').classList.add("active");
         document.getElementById("agreeRules").checked = false;
         updateCreateBtnState();
-        switchTab("profile");
+        closeCreateModal();
         await loadPetitions();
         await loadStats();
       } catch (err) {
@@ -1321,6 +1359,42 @@
       if (tab === "profile") window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    function renderPetitionRow(p, now) {
+      const id = Number(p.id);
+      const deadline = Number(p.deadline);
+      const isOpen = p.active && deadline > now;
+      const statusClass = !p.active ? "removed" : (isOpen ? "open" : "");
+      const sigCount = Number(p.signatureCount);
+      return `
+        <div class="petition-row" onclick="openPetitionDetail(${id})">
+          <div class="row-status-dot ${statusClass}"></div>
+          <div class="row-title">${escHtml(p.title)}</div>
+          <span class="badge badge-cat row-badge">${escHtml(p.category)}</span>
+          <span class="row-sig">${sigCount.toLocaleString()} sig${sigCount !== 1 ? "s" : ""}</span>
+        </div>`;
+    }
+
+    function toggleEditProfile() {
+      const body = document.getElementById("editProfileBody");
+      const chevron = document.getElementById("editProfileChevron");
+      const isOpen = body.style.display !== "none";
+      body.style.display = isOpen ? "none" : "block";
+      chevron.textContent = isOpen ? "▾" : "▴";
+    }
+
+    function openCreateModal() {
+      if (!walletAddress) {
+        showToast("Connect your wallet to create a petition.", "");
+        openWalletModal();
+        return;
+      }
+      document.getElementById("createModal").classList.add("show");
+    }
+
+    function closeCreateModal() {
+      document.getElementById("createModal").classList.remove("show");
+    }
+
     function goToProfile(event) {
       if (event) event.stopPropagation();
       const dropdown = document.getElementById("walletDropdown");
@@ -1354,15 +1428,13 @@
 
       const createdList = document.getElementById("profileCreatedList");
       createdList.innerHTML = mine.length
-        ? mine.map(p => renderPetition(p, now, false)).join("")
-        : '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Create your first one above.</p></div>';
-      resolveCreatorNames(createdList);
+        ? mine.map(p => renderPetitionRow(p, now)).join("")
+        : '<div class="empty" style="padding:32px 20px"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Click "+ New Petition" to create your first one.</p></div>';
 
       const signedList = document.getElementById("profileSignedList");
       signedList.innerHTML = signedByMe.length
-        ? signedByMe.map(p => renderPetition(p, now, false)).join("")
-        : '<div class="empty"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>Sign a petition from Browse to see it here.</p></div>';
-      resolveCreatorNames(signedList);
+        ? signedByMe.map(p => renderPetitionRow(p, now)).join("")
+        : '<div class="empty" style="padding:32px 20px"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>Sign a petition from Browse to see it here.</p></div>';
 
       loadMyProfileInfo();
     }
