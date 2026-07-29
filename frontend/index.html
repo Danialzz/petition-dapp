@@ -373,7 +373,6 @@
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
       <div class="nav-utils">
-        <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
         <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
           <div class="network-dot" id="networkDot"></div>
           <span>Base Sepolia</span>
@@ -638,7 +637,8 @@
         </div>
       </div>
       <div class="modal-actions" style="margin-top:20px">
-        <button class="btn-primary btn-sm" style="flex:1" onclick="closeRulesModal()">Close</button>
+        <button class="btn-primary btn-sm" id="rulesCloseBtn" style="flex:1" onclick="closeRulesModal()">Close</button>
+        <button class="btn-primary btn-sm" id="rulesContinueBtn" style="flex:1; display:none" onclick="continueToCreateFromRules()">Continue to Create Petition →</button>
       </div>
     </div>
   </div>
@@ -1249,6 +1249,7 @@
     // ─────────────────────────────────────────
     function openRulesModal(event) {
       if (event) event.preventDefault();
+      document.getElementById("rulesContinueBtn").style.display = "none";
       document.getElementById("rulesModal").classList.add("show");
     }
     function closeRulesModal() {
@@ -1449,6 +1450,17 @@
         openWalletModal();
         return;
       }
+      openRulesModalForCreate();
+    }
+
+    function openRulesModalForCreate() {
+      document.getElementById("rulesContinueBtn").style.display = "block";
+      document.getElementById("rulesModal").classList.add("show");
+    }
+
+    function continueToCreateFromRules() {
+      document.getElementById("rulesModal").classList.remove("show");
+      document.getElementById("rulesContinueBtn").style.display = "none";
       document.getElementById("createModal").classList.add("show");
     }
 
@@ -1822,16 +1834,4 @@
 
     (function setupFooterLinks() {
       const contractLink = document.getElementById("footerContractLink");
-      const profileLink = document.getElementById("footerProfileLink");
-      if (contractLink) contractLink.href = `https://sepolia.basescan.org/address/${CONTRACT_ADDRESS}`;
-      if (profileLink) {
-        if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
-          profileLink.href = `https://sepolia.basescan.org/address/${PROFILE_CONTRACT_ADDRESS}`;
-        } else {
-          profileLink.style.display = "none";
-        }
-      }
-    })();
-  </script>
-</body>
-</html>
+      const profileLink = doc
