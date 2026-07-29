@@ -42,10 +42,12 @@
     body { display: flex; flex-direction: column; align-items: center; padding: 0 0 96px; -webkit-font-smoothing: antialiased; }
 
     /* ── Nav ── */
-    nav { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-    .nav-dot { width: 22px; height: 22px; background: var(--blue); border-radius: 6px; box-shadow: 0 0 14px rgba(0,82,255,0.55); }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
+    nav { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; flex-shrink: 0; }
+    .nav-dot { width: 22px; height: 22px; background: var(--blue); border-radius: 6px; box-shadow: 0 0 14px rgba(0,82,255,0.55); flex-shrink: 0; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-utils { display: flex; align-items: center; gap: 6px; }
+    .nav-right .btn-primary { width: auto; margin-top: 0; white-space: nowrap; }
 
     /* ── Pill tabs, centered between hero and content (BaseDex Swap/Pool/Earn style) ── */
     .tabs-wrap { width: 100%; display: flex; justify-content: center; padding: 0 20px 32px; }
@@ -54,8 +56,8 @@
     .nav-tabs .tab.active { background: var(--blue); color: #fff; box-shadow: 0 0 16px rgba(0,82,255,0.35); }
 
     /* ── Wallet pill ── */
-    .wallet-pill { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-family: var(--mono); position: relative; cursor: default; }
-    .wallet-pill.connected { cursor: pointer; }
+    .wallet-pill { display: none; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 0 14px; height: 32px; font-size: 13px; font-family: var(--mono); position: relative; cursor: default; }
+    .wallet-pill.connected { display: flex; cursor: pointer; }
     .wallet-pill.connected:hover { border-color: var(--blue-border); }
     .wallet-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 180px; box-shadow: 0 12px 32px rgba(0,0,0,0.28); z-index: 150; }
     .wallet-dropdown.show { display: block; }
@@ -65,17 +67,17 @@
     .wallet-dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 
     /* ── Theme toggle ── */
-    .nav-link-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 7px; font-family: var(--sans); }
+    .nav-link-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 7px; font-family: var(--sans); height: 32px; display: flex; align-items: center; }
     .nav-link-btn:hover { color: var(--text); border-color: var(--blue-border); }
-    .theme-toggle { display: flex; align-items: center; justify-content: center; width: 38px; height: 22px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
-    .network-badge { display: none; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--mono); padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); }
+    .theme-toggle { display: flex; align-items: center; justify-content: center; width: 40px; height: 32px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; position: relative; padding: 0; flex-shrink: 0; }
+    .network-badge { display: none; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); font-family: var(--mono); padding: 0 12px; height: 32px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-2); }
     .network-badge.show { display: flex; }
-    .network-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .network-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
     .network-dot.online { background: var(--success); }
     .network-dot.offline { background: var(--error); }
-    @media (max-width: 640px) { .network-badge span { display: none; } }
-    .theme-toggle .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 4px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
-    html[data-theme="light"] .theme-toggle .knob { transform: translateX(14px); }
+    @media (max-width: 640px) { .network-badge span { display: none; } .network-badge { padding: 0 9px; } }
+    .theme-toggle .knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 5px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+    html[data-theme="light"] .theme-toggle .knob { transform: translateX(16px); }
 
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
     .status-dot.on { background: var(--success); }
@@ -361,8 +363,8 @@
     }
     @media (max-width: 400px) {
       .network-badge { display: none !important; }
-      .nav-link-btn { padding: 5px 10px; font-size: 12px; }
-      .wallet-pill { padding: 6px 10px; font-size: 12px; }
+      .nav-link-btn { padding: 0 10px; font-size: 12px; }
+      .wallet-pill { padding: 0 10px; font-size: 12px; }
     }
   </style>
 </head>
@@ -370,14 +372,16 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
-      <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
-      <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
-        <div class="network-dot" id="networkDot"></div>
-        <span>Base Sepolia</span>
+      <div class="nav-utils">
+        <button class="nav-link-btn" onclick="openRulesModal(event)" title="Community Guidelines">Rules</button>
+        <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
+          <div class="network-dot" id="networkDot"></div>
+          <span>Base Sepolia</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+          <div class="knob" id="themeKnob">🌙</div>
+        </button>
       </div>
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
-        <div class="knob" id="themeKnob">🌙</div>
-      </button>
       <div class="wallet-pill" id="walletPill" onclick="toggleWalletDropdown()">
         <div class="status-dot" id="statusDot"></div>
         <span id="walletAddress">Not connected</span>
