@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PetitionBase — Decentralized Petitions</title>
+  <meta name="description" content="Create and sign petitions that live forever on Base. Fully on-chain, transparent, and censorship-resistant — no company owns your signature." />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PetitionBase — Decentralized Petitions on Base" />
+  <meta property="og:description" content="Create and sign petitions that live forever on Base. Fully on-chain, transparent, and censorship-resistant." />
+  <meta property="og:url" content="https://danialzz.github.io/petition-dapp/frontend/index.html" />
+  <meta property="og:image" content="https://danialzz.github.io/petition-dapp/frontend/og-preview.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PetitionBase — Decentralized Petitions on Base" />
+  <meta name="twitter:description" content="Create and sign petitions that live forever on Base. Fully on-chain, transparent, and censorship-resistant." />
+  <meta name="twitter:image" content="https://danialzz.github.io/petition-dapp/frontend/og-preview.png" />
+  <meta name="twitter:site" content="@DanialXBT" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230052FF'/%3E%3C/svg%3E" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -118,6 +131,20 @@
     .row-sig { font-size: 12px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
 
     .create-modal { max-width: 560px; max-height: 86vh; overflow-y: auto; position: relative; }
+
+    /* ── Footer ── */
+    .site-footer { width: 100%; border-top: 1px solid var(--border); background: var(--surface); margin-top: 60px; }
+    .footer-inner { max-width: 1160px; margin: 0 auto; padding: 44px 20px 28px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; }
+    .footer-logo { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .footer-logo .nav-dot { width: 16px; height: 16px; }
+    .footer-tagline { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 340px; }
+    .footer-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 12px; }
+    .footer-col a { display: block; font-size: 13px; color: var(--text); text-decoration: none; margin-bottom: 10px; opacity: 0.85; }
+    .footer-col a:hover { color: var(--blue); opacity: 1; }
+    .footer-bottom { max-width: 1160px; margin: 0 auto; padding: 18px 20px 28px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+    .footer-base-badge { font-family: var(--mono); color: var(--blue); }
+    @media (max-width: 760px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
 
     .profile-header { display: flex; flex-direction: column; gap: 20px; }
     .profile-header-top { display: flex; align-items: center; gap: 16px; }
@@ -317,7 +344,8 @@
     .btn-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 11px 20px; flex: 1; }
 
     @media (max-width: 600px) {
-      nav { padding: 12px 14px; gap: 8px; }
+      nav { padding: 12px 14px; gap: 8px; flex-wrap: wrap; row-gap: 10px; }
+      .nav-right { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
       .nav-logo { font-size: 15px; }
       .form-row { grid-template-columns: 1fr; }
       .hero { padding: 40px 16px 32px; }
@@ -333,6 +361,8 @@
     }
     @media (max-width: 400px) {
       .network-badge { display: none !important; }
+      .nav-link-btn { padding: 5px 10px; font-size: 12px; }
+      .wallet-pill { padding: 6px 10px; font-size: 12px; }
     }
   </style>
 </head>
@@ -615,6 +645,33 @@
       <div id="detailModalBody"></div>
     </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-logo"><div class="nav-dot"></div>PetitionBase</div>
+        <p class="footer-tagline">A decentralized petition platform on Base. Every signature lives forever on-chain — no company owns it, no one can quietly delete it.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Contract</div>
+        <a id="footerContractLink" href="#" target="_blank" rel="noopener">Verified on Basescan ↗</a>
+        <a id="footerProfileLink" href="#" target="_blank" rel="noopener">Profile Registry ↗</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Project</div>
+        <a href="https://github.com/Danialzz/petition-dapp" target="_blank" rel="noopener">GitHub Repo ↗</a>
+        <a href="#" onclick="openRulesModal(event)">Community Guidelines</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Connect</div>
+        <a href="https://twitter.com/DanialXBT" target="_blank" rel="noopener">@DanialXBT ↗</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 PetitionBase · Built on Base Sepolia testnet</span>
+      <span class="footer-base-badge">◆ Powered by Base</span>
+    </div>
+  </footer>
 
   <div id="toast"></div>
 
@@ -1758,6 +1815,19 @@
         }
       };
     }
+
+    (function setupFooterLinks() {
+      const contractLink = document.getElementById("footerContractLink");
+      const profileLink = document.getElementById("footerProfileLink");
+      if (contractLink) contractLink.href = `https://sepolia.basescan.org/address/${CONTRACT_ADDRESS}`;
+      if (profileLink) {
+        if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
+          profileLink.href = `https://sepolia.basescan.org/address/${PROFILE_CONTRACT_ADDRESS}`;
+        } else {
+          profileLink.style.display = "none";
+        }
+      }
+    })();
   </script>
 </body>
 </html>
