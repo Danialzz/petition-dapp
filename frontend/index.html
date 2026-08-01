@@ -147,13 +147,16 @@
     @media (max-width: 760px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
 
-    .profile-header { display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
+    .profile-header { display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; padding-top: 0; }
     .profile-header::before { content: ""; position: absolute; top: -50px; right: -50px; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, var(--blue-dim), transparent 72%); pointer-events: none; }
-    .profile-header-top { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
-    .profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), #6a9bff); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 16px; flex-shrink: 0; box-shadow: 0 0 0 3px var(--blue-dim), 0 4px 16px rgba(0,82,255,0.3); }
-    .profile-display-name { font-family: var(--display); font-size: 19px; font-weight: 600; margin-bottom: 2px; }
-    .profile-address { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-    .profile-links { display: flex; gap: 10px; }
+    .profile-banner { margin: -28px -28px 0 -28px; height: 74px; background: linear-gradient(120deg, var(--blue) 0%, #6a9bff 45%, var(--blue-dim) 100%); border-radius: 12px 12px 0 0; position: relative; z-index: 0; }
+    .profile-header-top { display: flex; align-items: flex-end; gap: 16px; position: relative; z-index: 1; margin-top: -34px; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), #6a9bff); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 17px; flex-shrink: 0; border: 4px solid var(--surface); box-shadow: 0 4px 16px rgba(0,82,255,0.3); }
+    .profile-display-name { font-family: var(--display); font-size: 19px; font-weight: 600; margin-bottom: 2px; padding-bottom: 4px; }
+    .profile-address { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+    .profile-badges { display: flex; flex-wrap: wrap; gap: 6px; position: relative; z-index: 1; }
+    .profile-badge-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 20px; }
+    .profile-links { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
     .link-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 6px 12px; border-radius: 8px; }
     .link-btn:hover { color: var(--text); border-color: var(--blue-border); }
     .profile-stats { display: flex; gap: 4px; border-top: 1px solid var(--border); padding-top: 18px; position: relative; z-index: 1; }
@@ -163,6 +166,24 @@
     .profile-section { margin-top: 8px; }
     .profile-section-title { font-family: var(--display); font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
     @media (max-width: 480px) { .profile-header-top { flex-wrap: wrap; } }
+
+    #editProfileCard { border-top: 1px solid var(--border); padding-top: 16px; position: relative; z-index: 1; }
+    .profile-tabs { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+    .ptab { background: none; border: none; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 6px; font-family: var(--sans); }
+    .ptab.active { background: var(--blue); color: #fff; }
+    .ptab span { opacity: 0.8; }
+
+    .leaderboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; }
+    @media (max-width: 760px) { .leaderboard-grid { grid-template-columns: 1fr; } }
+    .lb-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-rank { font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--muted); width: 20px; flex-shrink: 0; }
+    .lb-rank.gold { color: #ffd700; }
+    .lb-rank.silver { color: #c8ccd4; }
+    .lb-rank.bronze { color: #cd7f32; }
+    .lb-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+    .lb-title:hover { color: var(--blue); }
+    .lb-value { font-size: 12px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
 
     .profile-left .card { transition: border-color 0.15s, box-shadow 0.15s; }
     .profile-left .card:hover { border-color: var(--blue-border); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
@@ -375,6 +396,7 @@
   <nav>
     <div class="nav-logo"><div class="nav-dot"></div>PetitionBase</div>
     <div class="nav-right">
+      <button class="nav-link-btn" onclick="switchTab('leaderboard')" title="Leaderboard">🏆 Leaderboard</button>
       <div class="nav-utils">
         <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
           <div class="network-dot" id="networkDot"></div>
@@ -472,52 +494,78 @@
       <div class="profile-grid">
         <div class="profile-left">
           <div class="card profile-header">
+            <div class="profile-banner"></div>
             <div class="profile-header-top">
               <div class="profile-avatar" id="profileAvatar">?</div>
               <div>
                 <div class="profile-display-name" id="profileDisplayName">Not connected</div>
                 <div class="profile-address" id="profileAddress"></div>
-                <div class="profile-links">
-                  <button class="link-btn" onclick="copyWalletAddress(event)">Copy Address</button>
-                  <button class="link-btn" onclick="viewOnExplorer(event)">View on Basescan</button>
-                </div>
               </div>
+            </div>
+            <div class="profile-badges" id="profileBadges"></div>
+            <div class="profile-links">
+              <button class="link-btn" onclick="copyProfileAddress(event)">Copy Address</button>
+              <button class="link-btn" onclick="viewProfileOnExplorer(event)">View on Basescan</button>
+              <button class="link-btn" onclick="shareProfile(event)">🔗 Share Profile</button>
             </div>
             <div class="profile-stats">
               <div class="profile-stat"><div class="profile-stat-num" id="profileCreatedCount">0</div><div class="profile-stat-label">📝 Created</div></div>
               <div class="profile-stat"><div class="profile-stat-num" id="profileSignedCount">0</div><div class="profile-stat-label">✅ Signed</div></div>
               <div class="profile-stat"><div class="profile-stat-num" id="profileSigsReceived">0</div><div class="profile-stat-label">🎯 Received</div></div>
             </div>
-          </div>
 
-          <div class="card">
-            <div class="edit-profile-toggle" onclick="toggleEditProfile()">
-              <span class="card-title" style="margin-bottom:0">⚙️ Profile Details</span>
-              <span class="chevron" id="editProfileChevron">▾</span>
-            </div>
-            <div id="editProfileBody" style="display:none; margin-top:16px;">
-              <div class="form-group">
-                <label class="form-label">Username <span class="label-optional">(optional, max 32 chars)</span></label>
-                <input type="text" id="profileUsernameInput" placeholder="e.g. danialzz" maxlength="32" />
+            <div id="editProfileCard" style="display:none">
+              <div class="edit-profile-toggle" onclick="toggleEditProfile()">
+                <span class="card-title" style="margin-bottom:0">⚙️ Edit Profile</span>
+                <span class="chevron" id="editProfileChevron">▾</span>
               </div>
-              <div class="form-group">
-                <label class="form-label">Bio <span class="label-optional">(optional, max 200 chars)</span></label>
-                <textarea id="profileBioInput" placeholder="Say a bit about yourself or what causes you care about..." maxlength="200" style="min-height:70px"></textarea>
+              <div id="editProfileBody" style="display:none; margin-top:16px;">
+                <div class="form-group">
+                  <label class="form-label">Username <span class="label-optional">(optional, max 32 chars)</span></label>
+                  <input type="text" id="profileUsernameInput" placeholder="e.g. danialzz" maxlength="32" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bio <span class="label-optional">(optional, max 200 chars)</span></label>
+                  <textarea id="profileBioInput" placeholder="Say a bit about yourself or what causes you care about..." maxlength="200" style="min-height:70px"></textarea>
+                </div>
+                <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
               </div>
-              <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Profile</button>
             </div>
           </div>
         </div>
 
         <div class="profile-right">
           <div class="profile-right-header">
-            <div class="profile-section-title" style="margin:0">📋 Your Petitions</div>
-            <button class="btn-primary btn-sm" onclick="openCreateModal()">+ New Petition</button>
+            <div class="profile-tabs">
+              <button class="ptab active" id="ptabBtnCreated" onclick="switchProfileListTab('created')">📋 Created <span id="ptabCreatedCount">(0)</span></button>
+              <button class="ptab" id="ptabBtnSigned" onclick="switchProfileListTab('signed')">✍️ Signed <span id="ptabSignedCount">(0)</span></button>
+            </div>
+            <button class="btn-primary btn-sm" id="newPetitionBtn" onclick="openCreateModal()" style="display:none">+ New Petition</button>
           </div>
-          <div class="profile-list-scroll" id="profileCreatedList"><div class="loading-state">Connect your wallet to see your petitions.</div></div>
+          <div class="profile-list-scroll" id="profileCreatedList"><div class="loading-state">Loading...</div></div>
+          <div class="profile-list-scroll" id="profileSignedList" style="display:none"><div class="loading-state">Loading...</div></div>
+        </div>
+      </div>
+    </div>
 
-          <div class="profile-section-title">✍️ Petitions You've Signed</div>
-          <div class="profile-list-scroll" id="profileSignedList"><div class="loading-state">Connect your wallet to see what you've signed.</div></div>
+    <div id="tab-leaderboard" style="display:none">
+      <button class="back-link" onclick="switchTab('browse')">← Back to Petitions</button>
+      <div class="leaderboard-grid">
+        <div class="card">
+          <div class="card-title">🔥 Trending Now</div>
+          <div id="lbTrending"><div class="loading-state">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✍️ Most Signed — All Time</div>
+          <div id="lbMostSigned"><div class="loading-state">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏛️ Top Creators</div>
+          <div id="lbTopCreators"><div class="loading-state">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💪 Top Signers</div>
+          <div id="lbTopSigners"><div class="loading-state">Fetching signer data...</div></div>
         </div>
       </div>
     </div>
@@ -710,6 +758,8 @@
     let removePetitionId = null;
     let currentTab = "browse";
     let allPetitionsCache = [];
+    let viewingProfileAddress = null;
+    let trendingIdsGlobal = new Set();
 
     // Read-only connection to Base Sepolia's public RPC — lets anyone browse
     // petitions without connecting a wallet. Only signing/creating/removing
@@ -810,6 +860,7 @@
           .slice(0, 3)
           .map(p => Number(p.id))
       );
+      trendingIdsGlobal = trendingIds;
 
       let filtered = allPetitionsCache.filter(p => {
         if (status === "removed") {
@@ -930,7 +981,7 @@
           <div class="petition-desc">${escHtml(p.description)}</div>
           <div class="petition-meta">
             <span class="badge badge-cat">${escHtml(p.category)}</span>
-            <a class="deadline-text creator-link" href="${explorerUrl}" target="_blank" rel="noopener">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a>
+            <a class="deadline-text creator-link" href="#" onclick="viewPublicProfile('${p.creator}', true); return false;">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a>
             <span class="deadline-text">· ${formatDate(p.createdAt)}</span>
           </div>
 
@@ -1051,7 +1102,7 @@
         <div class="detail-meta-grid">
           <div class="detail-meta-item">
             <div class="detail-meta-label">Created by</div>
-            <div class="detail-meta-value"><a href="${explorerUrl}" target="_blank" rel="noopener">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a></div>
+            <div class="detail-meta-value"><a href="#" onclick="viewPublicProfile('${p.creator}', true); return false;">Created by <span class="creator-name" data-addr="${p.creator}">${escHtml(short(p.creator))}</span></a></div>
           </div>
           <div class="detail-meta-item">
             <div class="detail-meta-label">Created on</div>
@@ -1362,25 +1413,27 @@
       }
     }
 
-    async function loadMyProfileInfo() {
-      if (!walletAddress) return;
+    async function loadProfileInfo(address, isOwn) {
+      if (!address) return;
       const nameEl = document.getElementById("profileDisplayName");
       const usernameInput = document.getElementById("profileUsernameInput");
       const bioInput = document.getElementById("profileBioInput");
       if (!profileReadContract) {
-        if (nameEl) nameEl.textContent = short(walletAddress);
+        if (nameEl) nameEl.textContent = short(address);
         return;
       }
       try {
-        const res = await profileReadContract.getProfile(walletAddress);
+        const res = await profileReadContract.getProfile(address);
         const username = res.exists && res.username ? res.username : "";
         const bio = res.exists && res.bio ? res.bio : "";
-        if (nameEl) nameEl.textContent = username ? "@" + username : short(walletAddress);
-        if (usernameInput && document.activeElement !== usernameInput) usernameInput.value = username;
-        if (bioInput && document.activeElement !== bioInput) bioInput.value = bio;
-        profileNameCache[walletAddress.toLowerCase()] = username || null;
+        if (nameEl) nameEl.textContent = username ? "@" + username : short(address);
+        if (isOwn) {
+          if (usernameInput && document.activeElement !== usernameInput) usernameInput.value = username;
+          if (bioInput && document.activeElement !== bioInput) bioInput.value = bio;
+        }
+        profileNameCache[address.toLowerCase()] = username || null;
       } catch (err) {
-        if (nameEl) nameEl.textContent = short(walletAddress);
+        if (nameEl) nameEl.textContent = short(address);
       }
     }
 
@@ -1408,7 +1461,7 @@
         await tx.wait();
         showToast("✅ Profile saved!", "success");
         profileNameCache[walletAddress.toLowerCase()] = username || null;
-        await loadMyProfileInfo();
+        await loadProfileInfo(walletAddress, true);
       } catch (err) {
         showToast("❌ " + (err.reason || err.message || "Failed to save profile"), "error");
       } finally {
@@ -1421,7 +1474,9 @@
       currentTab = tab;
       document.getElementById("tab-browse").style.display = tab === "browse" ? "block" : "none";
       document.getElementById("tab-profile").style.display = tab === "profile" ? "block" : "none";
-      if (tab === "profile") window.scrollTo({ top: 0, behavior: "smooth" });
+      document.getElementById("tab-leaderboard").style.display = tab === "leaderboard" ? "block" : "none";
+      if (tab !== "browse") window.scrollTo({ top: 0, behavior: "smooth" });
+      if (tab === "leaderboard") renderLeaderboard();
     }
 
     function renderPetitionRow(p, now) {
@@ -1479,42 +1534,234 @@
         openWalletModal();
         return;
       }
+      viewingProfileAddress = walletAddress;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("profile");
+      window.history.replaceState({}, "", url);
       switchTab("profile");
       renderProfile();
     }
 
-    function renderProfile() {
-      if (!walletAddress) return;
+    // Public, read-only profile view — reachable via ?profile=0x... with no
+    // wallet required. Falls back gracefully if the address is malformed.
+    function viewPublicProfile(address, pushUrl) {
+      let normalized;
+      try { normalized = ethers.getAddress(address); } catch { return; }
+      viewingProfileAddress = normalized;
+      if (pushUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("profile", normalized);
+        window.history.pushState({}, "", url);
+      }
+      switchTab("profile");
+      renderProfile();
+    }
+
+    function shareProfile(event) {
+      if (event) event.stopPropagation();
+      if (!viewingProfileAddress) return;
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.searchParams.set("profile", viewingProfileAddress);
+      navigator.clipboard.writeText(url.toString()).then(() => {
+        showToast("🔗 Profile link copied!", "success");
+      });
+    }
+
+    function copyProfileAddress(event) {
+      if (event) event.stopPropagation();
+      if (!viewingProfileAddress) return;
+      navigator.clipboard.writeText(viewingProfileAddress).then(() => {
+        showToast("✅ Address copied!", "success");
+      });
+    }
+
+    function viewProfileOnExplorer(event) {
+      if (event) event.stopPropagation();
+      if (!viewingProfileAddress) return;
+      window.open(`https://sepolia.basescan.org/address/${viewingProfileAddress}`, "_blank");
+    }
+
+    // For a public profile of someone else, we don't have a cached "signed"
+    // flag (that field only reflects the CONNECTED wallet's signatures), so
+    // we check on-chain for that specific address instead.
+    async function computeSignedByAddress(address) {
+      const activeContract = readContract;
+      if (!activeContract) return [];
+      const results = [];
+      for (const p of allPetitionsCache) {
+        try {
+          const didSign = await activeContract.hasWalletSigned(p.id, address);
+          if (didSign) results.push(p);
+        } catch {}
+      }
+      return results;
+    }
+
+    function computeProfileBadges(mine, signedList) {
+      const badges = [];
+      if (mine.length >= 1) badges.push({ icon: "🌱", label: "Creator" });
+      if (mine.length >= 5) badges.push({ icon: "🏛️", label: "Prolific Creator" });
+      if (signedList.length >= 1) badges.push({ icon: "✍️", label: "Signer" });
+      if (signedList.length >= 10) badges.push({ icon: "💯", label: "Power Signer" });
+      if (mine.some(p => trendingIdsGlobal.has(Number(p.id)))) badges.push({ icon: "🔥", label: "Trendsetter" });
+      if (mine.some(p => Number(p.signatureGoal) > 0 && Number(p.signatureCount) >= Number(p.signatureGoal))) {
+        badges.push({ icon: "🎯", label: "Goal Achiever" });
+      }
+      return badges;
+    }
+
+    let profileListTab = "created";
+    function switchProfileListTab(tab) {
+      profileListTab = tab;
+      document.getElementById("ptabBtnCreated").classList.toggle("active", tab === "created");
+      document.getElementById("ptabBtnSigned").classList.toggle("active", tab === "signed");
+      document.getElementById("profileCreatedList").style.display = tab === "created" ? "block" : "none";
+      document.getElementById("profileSignedList").style.display = tab === "signed" ? "block" : "none";
+    }
+
+    async function renderProfile() {
+      const target = viewingProfileAddress;
+      if (!target) return;
       const addrEl = document.getElementById("profileAddress");
       const avatarEl = document.getElementById("profileAvatar");
       if (!addrEl || !avatarEl) return;
 
-      addrEl.textContent = short(walletAddress);
-      avatarEl.textContent = walletAddress.slice(2, 4).toUpperCase();
+      const isOwn = !!walletAddress && target.toLowerCase() === walletAddress.toLowerCase();
+      document.getElementById("editProfileCard").style.display = isOwn ? "block" : "none";
+      document.getElementById("newPetitionBtn").style.display = isOwn ? "inline-flex" : "none";
+
+      addrEl.textContent = short(target);
+      avatarEl.textContent = target.slice(2, 4).toUpperCase();
 
       const now = Math.floor(Date.now() / 1000);
-      const mine = allPetitionsCache.filter(p => p.creator && p.creator.toLowerCase() === walletAddress.toLowerCase());
-      const signedByMe = allPetitionsCache.filter(p => p.signed);
+      const mine = allPetitionsCache.filter(p => p.creator && p.creator.toLowerCase() === target.toLowerCase());
+      const signedList = isOwn
+        ? allPetitionsCache.filter(p => p.signed)
+        : await computeSignedByAddress(target);
       const sigsReceived = mine.reduce((sum, p) => sum + Number(p.signatureCount), 0);
 
       document.getElementById("profileCreatedCount").textContent = mine.length;
-      document.getElementById("profileSignedCount").textContent = signedByMe.length;
+      document.getElementById("profileSignedCount").textContent = signedList.length;
       document.getElementById("profileSigsReceived").textContent = sigsReceived.toLocaleString();
+      document.getElementById("ptabCreatedCount").textContent = `(${mine.length})`;
+      document.getElementById("ptabSignedCount").textContent = `(${signedList.length})`;
+
+      const badgesEl = document.getElementById("profileBadges");
+      const badges = computeProfileBadges(mine, signedList);
+      badgesEl.innerHTML = badges.length
+        ? badges.map(b => `<span class="profile-badge-chip">${b.icon} ${b.label}</span>`).join("")
+        : `<span class="profile-badge-chip" style="opacity:0.6">No badges yet</span>`;
 
       const createdList = document.getElementById("profileCreatedList");
       createdList.innerHTML = mine.length
         ? mine.map(p => renderPetitionRow(p, now)).join("")
-        : '<div class="empty" style="padding:32px 20px"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Click "+ New Petition" to create your first one.</p></div>';
+        : `<div class="empty" style="padding:32px 20px"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>${isOwn ? 'Click "+ New Petition" to create your first one.' : "This wallet hasn't created any petitions."}</p></div>`;
 
-      const signedList = document.getElementById("profileSignedList");
-      signedList.innerHTML = signedByMe.length
-        ? signedByMe.map(p => renderPetitionRow(p, now)).join("")
-        : '<div class="empty" style="padding:32px 20px"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>Sign a petition from Browse to see it here.</p></div>';
+      const signedListEl = document.getElementById("profileSignedList");
+      signedListEl.innerHTML = signedList.length
+        ? signedList.map(p => renderPetitionRow(p, now)).join("")
+        : `<div class="empty" style="padding:32px 20px"><div class="empty-icon">✍️</div><h3>Nothing signed yet</h3><p>${isOwn ? "Sign a petition from Browse to see it here." : "This wallet hasn't signed any petitions."}</p></div>`;
 
-      loadMyProfileInfo();
+      switchProfileListTab(profileListTab);
+      await loadProfileInfo(target, isOwn);
     }
 
     function short(addr) { return addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : ""; }
+
+    // ─────────────────────────────────────────
+    // Leaderboard — trending, most signed, top creators, top signers.
+    // All computed client-side from data already fetched; only "Top Signers"
+    // needs extra reads (one getSigners call per petition, cached after first load).
+    // ─────────────────────────────────────────
+    const signerRawCache = new Map();
+    async function getSignersRaw(id) {
+      if (signerRawCache.has(id)) return signerRawCache.get(id);
+      const activeContract = contract || readContract;
+      if (!activeContract) return [];
+      try {
+        const signers = await activeContract.getSigners(id);
+        signerRawCache.set(id, signers);
+        return signers;
+      } catch {
+        return [];
+      }
+    }
+
+    function lbRankBadge(i) {
+      const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+      return `<span class="lb-rank ${cls}">#${i + 1}</span>`;
+    }
+    function lbPetitionRow(i, title, value, id) {
+      return `<div class="lb-row">${lbRankBadge(i)}<span class="lb-title" onclick="openPetitionDetail(${id})">${escHtml(title)}</span><span class="lb-value">${escHtml(value)}</span></div>`;
+    }
+    function lbProfileRow(i, title, value, addr) {
+      return `<div class="lb-row">${lbRankBadge(i)}<span class="lb-title" onclick="viewPublicProfile('${addr}', true)">${escHtml(title)}</span><span class="lb-value">${escHtml(value)}</span></div>`;
+    }
+
+    async function renderLeaderboard() {
+      const now = Math.floor(Date.now() / 1000);
+
+      const trendingEl = document.getElementById("lbTrending");
+      const trending = allPetitionsCache
+        .filter(p => p.active && Number(p.deadline) > now && Number(p.signatureCount) > 0)
+        .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount))
+        .slice(0, 5);
+      trendingEl.innerHTML = trending.length
+        ? trending.map((p, i) => lbPetitionRow(i, p.title, `${p.signatureCount} sigs`, Number(p.id))).join("")
+        : `<div class="loading-state" style="padding:16px 0">No trending petitions yet.</div>`;
+
+      const mostSignedEl = document.getElementById("lbMostSigned");
+      const mostSigned = allPetitionsCache
+        .filter(p => p.active)
+        .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount))
+        .slice(0, 5);
+      mostSignedEl.innerHTML = mostSigned.length
+        ? mostSigned.map((p, i) => lbPetitionRow(i, p.title, `${p.signatureCount} sigs`, Number(p.id))).join("")
+        : `<div class="loading-state" style="padding:16px 0">No petitions yet.</div>`;
+
+      const creatorMap = new Map();
+      allPetitionsCache.forEach(p => {
+        if (!p.creator) return;
+        const key = p.creator.toLowerCase();
+        const entry = creatorMap.get(key) || { count: 0, sigs: 0, addr: p.creator };
+        entry.count++;
+        entry.sigs += Number(p.signatureCount);
+        creatorMap.set(key, entry);
+      });
+      const topCreators = [...creatorMap.values()].sort((a, b) => b.sigs - a.sigs).slice(0, 5);
+      const creatorsEl = document.getElementById("lbTopCreators");
+      if (topCreators.length) {
+        const rows = await Promise.all(topCreators.map(async (c, i) => {
+          const name = await getProfileName(c.addr);
+          return lbProfileRow(i, name ? "@" + name : short(c.addr), `${c.sigs} sigs · ${c.count} created`, c.addr);
+        }));
+        creatorsEl.innerHTML = rows.join("");
+      } else {
+        creatorsEl.innerHTML = `<div class="loading-state" style="padding:16px 0">No creators yet.</div>`;
+      }
+
+      const signersEl = document.getElementById("lbTopSigners");
+      const candidates = allPetitionsCache.filter(p => Number(p.signatureCount) > 0);
+      const signerCounts = new Map();
+      for (const p of candidates) {
+        const signers = await getSignersRaw(Number(p.id));
+        signers.forEach(addr => {
+          const key = addr.toLowerCase();
+          signerCounts.set(key, (signerCounts.get(key) || 0) + 1);
+        });
+      }
+      const topSigners = [...signerCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+      if (topSigners.length) {
+        const rows = await Promise.all(topSigners.map(async ([addr, count], i) => {
+          const name = await getProfileName(addr);
+          return lbProfileRow(i, name ? "@" + name : short(addr), `${count} signature${count !== 1 ? "s" : ""}`, addr);
+        }));
+        signersEl.innerHTML = rows.join("");
+      } else {
+        signersEl.innerHTML = `<div class="loading-state" style="padding:16px 0">No signatures yet.</div>`;
+      }
+    }
 
     // ─────────────────────────────────────────
     // Theme toggle (light / dark)
@@ -1782,7 +2029,11 @@
     }, 600);
 
     // Anyone can browse petitions without connecting a wallet.
-    loadPetitions();
+    loadPetitions().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      const profileParam = params.get("profile");
+      if (profileParam) viewPublicProfile(profileParam, false);
+    });
     loadStats();
   </script>
 
@@ -1822,7 +2073,8 @@
         _origApplyFilters();
         renderCategoryChart();
         resolveCreatorNames(document.getElementById("petitionList"));
-        if (walletAddress) renderProfile();
+        if (viewingProfileAddress) renderProfile();
+        if (currentTab === "leaderboard") renderLeaderboard();
         if (currentDetailId !== null) {
           const p = allPetitionsCache.find(x => Number(x.id) === currentDetailId);
           if (p) {
