@@ -13,6 +13,11 @@ describe("PetitionPlatform", function () {
     await contract.waitForDeployment();
   });
 
+  async function getDeadline(days) {
+    const now = await time.latest();
+    return now + days * 24 * 60 * 60;
+  }
+
   // ── Deployment ──
   describe("Deployment", function () {
     it("should set the deployer as owner", async function () {
@@ -27,56 +32,85 @@ describe("PetitionPlatform", function () {
   // ── Creating Petitions ──
   describe("createPetition", function () {
     it("should create a petition and emit event", async function () {
-      await expect(
-        contract.connect(user1).createPetition("Save the Ocean", "We need clean oceans", "Environment", 30)
-      )
+      const tx = await contract.connect(user1)
+        .createPetition("Save the Ocean", "We need clean oceans", "Environment", 30, 1000);
+      const receipt = await tx.wait();
+      const block = await ethers.provider.getBlock(receipt.blockNumber);
+      const expectedDeadline = block.timestamp + 30 * 24 * 60 * 60;
+
+      await expect(tx)
         .to.emit(contract, "PetitionCreated")
-        .withArgs(1, user1.address, "Save the Ocean", "Environment", await getDeadline(30));
+        .withArgs(1, user1.address, "Save the Ocean", "Environment", expectedDeadline, 1000);
     });
 
     it("should increment petitionCount", async function () {
-      await contract.connect(user1).createPetition("Title", "Description", "Category", 7);
+      await contract.connect(user1).createPetition("Title", "Description", "Category", 7, 0);
       expect(await contract.getTotalPetitions()).to.equal(1);
     });
 
-    it("should store petition data correctly", async function () {
-      await contract.connect(user1).createPetition("Save the Ocean", "We need clean oceans", "Environment", 30);
+    it("should store petition data correctly including signature goal", async function () {
+      await contract.connect(user1).createPetition("Save the Ocean", "We need clean oceans", "Environment", 30, 500);
       const petition = await contract.getPetition(1);
       expect(petition.title).to.equal("Save the Ocean");
       expect(petition.creator).to.equal(user1.address);
       expect(petition.signatureCount).to.equal(0);
+      expect(petition.signatureGoal).to.equal(500);
       expect(petition.active).to.equal(true);
+    });
+
+    it("should allow a zero signature goal (no target)", async function () {
+      await contract.connect(user1).createPetition("Title", "Desc", "Cat", 7, 0);
+      const petition = await contract.getPetition(1);
+      expect(petition.signatureGoal).to.equal(0);
     });
 
     it("should revert with empty title", async function () {
       await expect(
-        contract.createPetition("", "Description", "Category", 7)
+        contract.createPetition("", "Description", "Category", 7, 0)
       ).to.be.revertedWith("Title cannot be empty");
     });
 
     it("should revert with title over 100 chars", async function () {
       await expect(
-        contract.createPetition("a".repeat(101), "Description", "Category", 7)
+        contract.createPetition("a".repeat(101), "Description", "Category", 7, 0)
       ).to.be.revertedWith("Title too long (max 100 chars)");
+    });
+
+    it("should revert with empty description", async function () {
+      await expect(
+        contract.createPetition("Title", "", "Category", 7, 0)
+      ).to.be.revertedWith("Description cannot be empty");
+    });
+
+    it("should revert with empty category", async function () {
+      await expect(
+        contract.createPetition("Title", "Description", "", 7, 0)
+      ).to.be.revertedWith("Category cannot be empty");
     });
 
     it("should revert with duration of 0 days", async function () {
       await expect(
-        contract.createPetition("Title", "Description", "Category", 0)
+        contract.createPetition("Title", "Description", "Category", 0, 0)
       ).to.be.revertedWith("Duration must be at least 1 day");
     });
 
     it("should revert with duration over 365 days", async function () {
       await expect(
-        contract.createPetition("Title", "Description", "Category", 366)
+        contract.createPetition("Title", "Description", "Category", 366, 0)
       ).to.be.revertedWith("Duration cannot exceed 365 days");
+    });
+
+    it("should revert with an absurd signature goal", async function () {
+      await expect(
+        contract.createPetition("Title", "Description", "Category", 7, 10_000_001)
+      ).to.be.revertedWith("Signature goal too large");
     });
   });
 
   // ── Signing Petitions ──
   describe("signPetition", function () {
     beforeEach(async function () {
-      await contract.connect(user1).createPetition("Save the Ocean", "Description", "Environment", 30);
+      await contract.connect(user1).createPetition("Save the Ocean", "Description", "Environment", 30, 0);
     });
 
     it("should allow a wallet to sign a petition", async function () {
@@ -116,16 +150,25 @@ describe("PetitionPlatform", function () {
     });
   });
 
-  // ── Owner: Remove Petition ──
+  // ── Remove Petition (owner OR creator) ──
   describe("removePetition", function () {
     beforeEach(async function () {
-      await contract.connect(user1).createPetition("Bad Petition", "Description", "Other", 7);
+      await contract.connect(user1).createPetition("Bad Petition", "Description", "Other", 7, 0);
     });
 
-    it("should allow owner to remove a petition", async function () {
+    it("should allow owner to remove any petition", async function () {
       await expect(contract.connect(owner).removePetition(1, "Violates platform rules"))
         .to.emit(contract, "PetitionRemoved")
         .withArgs(1, owner.address, "Violates platform rules");
+
+      const petition = await contract.getPetition(1);
+      expect(petition.active).to.equal(false);
+    });
+
+    it("should allow the creator to remove their own petition", async function () {
+      await expect(contract.connect(user1).removePetition(1, "Changed my mind"))
+        .to.emit(contract, "PetitionRemoved")
+        .withArgs(1, user1.address, "Changed my mind");
 
       const petition = await contract.getPetition(1);
       expect(petition.active).to.equal(false);
@@ -137,21 +180,27 @@ describe("PetitionPlatform", function () {
         .to.be.revertedWith("Petition has been removed");
     });
 
-    it("should revert if non-owner tries to remove", async function () {
-      await expect(contract.connect(user1).removePetition(1, "I don't like it"))
-        .to.be.revertedWith("Not the platform owner");
+    it("should revert if an unrelated user tries to remove", async function () {
+      await expect(contract.connect(user2).removePetition(1, "I don't like it"))
+        .to.be.revertedWith("Only the platform owner or the petition's creator can remove it");
     });
 
     it("should revert with empty reason", async function () {
       await expect(contract.connect(owner).removePetition(1, ""))
         .to.be.revertedWith("Must provide a reason");
     });
+
+    it("should revert if petition already removed", async function () {
+      await contract.connect(owner).removePetition(1, "Spam");
+      await expect(contract.connect(owner).removePetition(1, "Again"))
+        .to.be.revertedWith("Petition already removed");
+    });
   });
 
   // ── View Functions ──
   describe("View functions", function () {
     beforeEach(async function () {
-      await contract.connect(user1).createPetition("Petition 1", "Desc", "Category", 30);
+      await contract.connect(user1).createPetition("Petition 1", "Desc", "Category", 30, 0);
       await contract.connect(user2).signPetition(1);
       await contract.connect(user3).signPetition(1);
     });
@@ -172,18 +221,41 @@ describe("PetitionPlatform", function () {
       expect(await contract.isPetitionOpen(1)).to.equal(false);
     });
 
+    it("should return isPetitionOpen as false for removed petition", async function () {
+      await contract.connect(owner).removePetition(1, "Cleanup");
+      expect(await contract.isPetitionOpen(1)).to.equal(false);
+    });
+
     it("should return all petition IDs", async function () {
-      await contract.connect(user1).createPetition("Petition 2", "Desc", "Category", 7);
+      await contract.connect(user1).createPetition("Petition 2", "Desc", "Category", 7, 0);
       const ids = await contract.getAllPetitionIds();
       expect(ids.length).to.equal(2);
+      expect(ids[0]).to.equal(1);
+      expect(ids[1]).to.equal(2);
+    });
+
+    it("should revert getPetition for non-existent id", async function () {
+      await expect(contract.getPetition(42)).to.be.revertedWith("Petition does not exist");
     });
   });
 
   // ── Ownership ──
   describe("transferOwnership", function () {
     it("should transfer ownership", async function () {
-      await contract.connect(owner).transferOwnership(user1.address);
+      await expect(contract.connect(owner).transferOwnership(user1.address))
+        .to.emit(contract, "OwnershipTransferred")
+        .withArgs(owner.address, user1.address);
       expect(await contract.owner()).to.equal(user1.address);
     });
 
-    it("sho
+    it("should revert if non-owner tries to transfer", async function () {
+      await expect(contract.connect(user1).transferOwnership(user1.address))
+        .to.be.revertedWith("Not the platform owner");
+    });
+
+    it("should revert when transferring to the zero address", async function () {
+      await expect(contract.connect(owner).transferOwnership(ethers.ZeroAddress))
+        .to.be.revertedWith("New owner cannot be zero address");
+    });
+  });
+});

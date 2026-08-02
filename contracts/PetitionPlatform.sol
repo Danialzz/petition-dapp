@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 /// @title PetitionPlatform
-/// @notice A decentralized petition platform on Base network.
+/// @notice A decentralized petition platform on Base.
 ///         Anyone can create a petition. Anyone can sign open petitions.
-///         The platform owner can remove ANY petition that violates rules.
+///         The platform owner can remove ANY petition that violates the rules.
 ///         A petition's creator can also remove their OWN petition at any time.
 contract PetitionPlatform {
 
@@ -18,9 +18,10 @@ contract PetitionPlatform {
         string title;
         string description;
         string category;
-        uint256 deadline;       // Unix timestamp when signing closes
+        uint256 deadline;        // Unix timestamp when signing closes
         uint256 signatureCount;
-        bool active;            // false = removed (by owner or creator)
+        uint256 signatureGoal;   // Creator-set target (0 = no target)
+        bool active;             // false = removed (by owner or creator)
         uint256 createdAt;
     }
 
@@ -49,7 +50,8 @@ contract PetitionPlatform {
         address indexed creator,
         string title,
         string category,
-        uint256 deadline
+        uint256 deadline,
+        uint256 signatureGoal
     );
 
     event PetitionSigned(
@@ -106,11 +108,13 @@ contract PetitionPlatform {
     /// @param _description Full description of what you're petitioning for
     /// @param _category Category label (e.g. "Environment", "Human Rights")
     /// @param _durationInDays How many days the petition stays open
+    /// @param _signatureGoal Optional signature target (0 = no target)
     function createPetition(
         string calldata _title,
         string calldata _description,
         string calldata _category,
-        uint256 _durationInDays
+        uint256 _durationInDays,
+        uint256 _signatureGoal
     ) external returns (uint256) {
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_title).length <= 100, "Title too long (max 100 chars)");
@@ -119,6 +123,7 @@ contract PetitionPlatform {
         require(bytes(_category).length > 0, "Category cannot be empty");
         require(_durationInDays >= 1, "Duration must be at least 1 day");
         require(_durationInDays <= 365, "Duration cannot exceed 365 days");
+        require(_signatureGoal <= 10_000_000, "Signature goal too large");
 
         petitionCount++;
         uint256 newId = petitionCount;
@@ -132,11 +137,12 @@ contract PetitionPlatform {
             category: _category,
             deadline: deadline,
             signatureCount: 0,
+            signatureGoal: _signatureGoal,
             active: true,
             createdAt: block.timestamp
         });
 
-        emit PetitionCreated(newId, msg.sender, _title, _category, deadline);
+        emit PetitionCreated(newId, msg.sender, _title, _category, deadline, _signatureGoal);
         return newId;
     }
 
@@ -158,9 +164,9 @@ contract PetitionPlatform {
 
     /// @notice Remove a petition. Callable by the platform owner (any petition,
     ///         e.g. for rule violations) OR by the petition's own creator
-    ///         (their own petition only, e.g. they no longer want it listed).
+    ///         (their own petition only).
     /// @param _id The petition ID to remove
-    /// @param _reason The reason for removal
+    /// @param _reason The reason for removal (stored on-chain)
     function removePetition(uint256 _id, string calldata _reason)
         external
         petitionExists(_id)
