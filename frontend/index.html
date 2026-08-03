@@ -211,68 +211,96 @@
     .ptab.active { background: var(--blue); color: #fff; }
     .ptab span { opacity: 0.8; }
 
-    .leaderboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin: 0 auto; }
-    @media (max-width: 760px) { .leaderboard-grid { grid-template-columns: 1fr; } }
+    /* ═══════════ Leaderboard ═══════════ */
+    .lb-wrap { max-width: 960px; margin: 0 auto; }
 
     /* ── Hero ── */
-    .lb-hero { text-align: center; padding: 16px 0 34px; position: relative; }
-    .lb-hero-glow { position: absolute; inset: -80px -20% auto; height: 280px; background: radial-gradient(ellipse at 50% 0%, var(--blue-dim-strong), transparent 65%); pointer-events: none; z-index: -1; }
-    .lb-hero-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 600; font-family: var(--mono); padding: 7px 16px; border-radius: 999px; margin-bottom: 20px; }
-    .lb-hero h2 { font-family: var(--display); font-size: clamp(36px, 5vw, 50px); font-weight: 700; letter-spacing: -1.6px; line-height: 1.04; margin-bottom: 14px; }
+    .lb-hero { text-align: center; padding: 10px 0 28px; position: relative; }
+    .lb-hero-glow { position: absolute; inset: -90px -25% auto; height: 300px; background: radial-gradient(ellipse at 50% 0%, var(--blue-dim-strong), transparent 65%); pointer-events: none; z-index: -1; }
+    .lb-hero-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 700; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.6px; padding: 7px 16px; border-radius: 999px; margin-bottom: 18px; }
+    .lb-hero h2 { font-family: var(--display); font-size: clamp(34px, 5vw, 48px); font-weight: 700; letter-spacing: -1.6px; line-height: 1.05; margin-bottom: 12px; }
     .lb-hero h2 span { background: linear-gradient(120deg, var(--blue), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .lb-hero p { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+    .lb-hero p { color: var(--muted); font-size: 14.5px; line-height: 1.6; max-width: 470px; margin: 0 auto; }
 
-    /* ── Spotlight ── */
-    .lb-spotlight { max-width: 900px; margin: 0 auto 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px 24px 28px; box-shadow: var(--shadow-sm); }
-    .lb-spot-head { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-    .lb-spot-medal { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--blue), var(--violet)); font-size: 20px; flex-shrink: 0; box-shadow: 0 8px 20px -6px var(--blue-dim-strong); }
-    .lb-spot-title { font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
-    .lb-spot-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .lb-podium { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-    .lb-pod { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; padding: 18px 14px 0; border-radius: 14px; min-width: 0; position: relative; }
-    .lb-pod-1 { background: linear-gradient(180deg, var(--blue-dim-strong), transparent 60%); border: 1px solid var(--blue-border); }
-    .lb-pod-2, .lb-pod-3 { background: var(--surface-2); border: 1px solid var(--border); }
-    .lb-pod-crown { font-size: 26px; line-height: 1; height: 28px; display: flex; align-items: center; justify-content: center; }
-    .lb-pod-rank { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.6px; padding: 3px 11px; border-radius: 999px; }
-    .lb-pod-rank.gold { background: rgba(246,196,83,0.15); color: #F6C453; }
-    .lb-pod-rank.silver { background: rgba(174,182,194,0.14); color: #AEB6C2; }
-    .lb-pod-rank.bronze { background: rgba(205,139,94,0.16); color: #CD8B5E; }
-    .lb-pod-title { font-family: var(--display); font-size: 14px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; transition: color .15s; }
-    .lb-pod-title:hover { color: var(--blue); }
-    .lb-pod-sigs { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-    .lb-pod-sigs b { color: var(--text); font-weight: 700; }
-    .lb-pod-bar { width: 100%; height: 5px; border-radius: 999px; margin-top: 4px; overflow: hidden; background: var(--surface-3); }
-    .lb-pod-1 .lb-pod-bar-fill { width: 100%; }
-    .lb-pod-2 .lb-pod-bar-fill { width: 66%; }
-    .lb-pod-3 .lb-pod-bar-fill { width: 40%; }
-    .lb-pod-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--violet)); }
-    @media (max-width: 600px) { .lb-podium { gap: 8px; } .lb-pod { padding: 14px 8px 0; } .lb-pod-title { font-size: 12px; } }
+    /* ── Stat strip ── */
+    .lb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .lb-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 15px 17px; box-shadow: var(--shadow-sm); transition: border-color .18s, box-shadow .18s, transform .18s; }
+    .lb-stat:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .lb-stat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
+    .lb-stat-ico { font-size: 13px; line-height: 1; }
+    .lb-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--subtle); }
+    .lb-stat-num { font-family: var(--display); font-size: 25px; font-weight: 700; letter-spacing: -0.6px; line-height: 1; }
+    @media (max-width: 720px) { .lb-stats { grid-template-columns: repeat(2, 1fr); } }
 
-    /* ── Cards ── */
-    .lb-card { padding: 20px; display: flex; flex-direction: column; }
-    .lb-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
-    .lb-card-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--blue-dim); border: 1px solid var(--blue-border); font-size: 17px; flex-shrink: 0; }
-    .lb-card-title { font-family: var(--display); font-size: 14px; font-weight: 700; letter-spacing: -0.1px; line-height: 1.2; }
-    .lb-card-sub { font-size: 11px; color: var(--subtle); margin-top: 1px; }
-    .lb-chip { margin-left: auto; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.4px; color: var(--subtle); background: var(--surface-2); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    /* ── Panels (shared shell for podium + rankings) ── */
+    .lb-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-sm); margin-bottom: 20px; overflow: hidden; }
+    .lb-panel-head { display: flex; align-items: center; gap: 13px; padding: 17px 20px; border-bottom: 1px solid var(--border); }
+    .lb-panel-ico { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--blue), var(--violet)); font-size: 18px; flex-shrink: 0; box-shadow: 0 10px 22px -10px var(--blue); }
+    .lb-panel-title { font-family: var(--display); font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+    .lb-panel-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .lb-chip { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--subtle); background: var(--surface-2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
     .lb-chip-live { color: var(--success); background: var(--success-dim); border-color: transparent; }
 
+    /* ── Podium ── */
+    .lb-podium { display: grid; grid-template-columns: 1fr 1.16fr 1fr; align-items: end; gap: 14px; padding: 30px 20px 24px; }
+    .lb-pod { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 20px 14px 16px; border-radius: 16px; min-width: 0; border: 1px solid var(--border); background: var(--surface-2); transition: transform .2s, border-color .2s, box-shadow .2s; }
+    .lb-pod:hover { transform: translateY(-3px); border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+    .lb-pod-1 { padding: 28px 16px 20px; border-color: var(--blue-border); background: linear-gradient(180deg, var(--blue-dim-strong), transparent 72%), var(--surface-2); box-shadow: 0 18px 44px -24px var(--blue); }
+    .lb-pod-crown { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 25px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)); }
+    .lb-pod-av { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 14px; background: var(--surface-3); border: 1px solid var(--border); font-size: 21px; }
+    .lb-pod-1 .lb-pod-av { width: 54px; height: 54px; font-size: 25px; background: linear-gradient(135deg, var(--blue-dim-strong), var(--violet-dim)); border-color: var(--blue-border); }
+    .lb-pod-rank { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 0.9px; padding: 3px 11px; border-radius: 999px; }
+    .lb-pod-rank.gold { background: rgba(246,196,83,0.16); color: #F6C453; }
+    .lb-pod-rank.silver { background: rgba(174,182,194,0.14); color: #AEB6C2; }
+    .lb-pod-rank.bronze { background: rgba(205,139,94,0.16); color: #CD8B5E; }
+    .lb-pod-title { font-family: var(--display); font-size: 13.5px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; transition: color .15s; }
+    .lb-pod-1 .lb-pod-title { font-size: 15px; }
+    .lb-pod-title:hover { color: var(--blue); }
+    .lb-pod-sigs { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+    .lb-pod-sigs b { color: var(--text); font-weight: 700; }
+    .lb-pod-bar { width: 100%; height: 5px; border-radius: 999px; margin-top: 3px; overflow: hidden; background: var(--surface-3); }
+    .lb-pod-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--violet)); transition: width .6s cubic-bezier(.4,0,.2,1); }
+    .lb-pod-ghost { border-style: dashed; background: transparent; justify-content: center; min-height: 168px; color: var(--subtle); font-size: 12px; }
+    .lb-pod-ghost:hover { transform: none; box-shadow: none; border-color: var(--border); }
+    @media (max-width: 620px) { .lb-podium { grid-template-columns: 1fr; padding: 26px 16px 18px; gap: 18px; } .lb-pod-1 { order: -1; } }
+
+    /* ── Segmented rankings board ── */
+    .lb-tabs { display: flex; gap: 4px; padding: 11px 12px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+    .lb-tabs::-webkit-scrollbar { display: none; }
+    .lb-tab { display: inline-flex; align-items: center; gap: 7px; background: none; border: 1px solid transparent; color: var(--muted); font-family: var(--sans); font-size: 12.5px; font-weight: 600; padding: 9px 14px; border-radius: 10px; white-space: nowrap; cursor: pointer; transition: color .15s, background-color .15s, border-color .15s; }
+    .lb-tab:hover { color: var(--text); background: var(--surface-2); }
+    .lb-tab.active { color: var(--blue); background: var(--blue-dim); border-color: var(--blue-border); }
+    .lb-tab-ico { font-size: 13px; line-height: 1; }
+    .lb-list { padding: 8px 10px 12px; }
+
     /* ── Rows — every row shares an identical column grid: rank | avatar | content | value ── */
-    .lb-row { display: grid; grid-template-columns: 32px 38px 1fr auto; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 10px; transition: background-color .15s; }
+    .lb-row { display: grid; grid-template-columns: 32px 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 10px; border-radius: 12px; transition: background-color .15s; }
     .lb-row:hover { background: var(--surface-2); }
     .lb-row + .lb-row { border-top: 1px solid var(--border); }
-    .lb-rank { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--subtle); background: var(--surface-3); border: 1px solid var(--border); }
+    .lb-rank { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; font-family: var(--display); font-size: 12.5px; font-weight: 700; color: var(--subtle); background: var(--surface-3); border: 1px solid var(--border); }
     .lb-rank.gold { background: rgba(246,196,83,0.16); color: #F6C453; border-color: rgba(246,196,83,0.35); }
     .lb-rank.silver { background: rgba(174,182,194,0.14); color: #AEB6C2; border-color: rgba(174,182,194,0.3); }
     .lb-rank.bronze { background: rgba(205,139,94,0.16); color: #CD8B5E; border-color: rgba(205,139,94,0.35); }
-    .lb-avatar { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; }
-    .lb-avatar-cat { border-radius: 9px; background: var(--surface-3); border: 1px solid var(--border); font-size: 15px; }
-    .lb-main { flex: 1; min-width: 0; }
-    .lb-title { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: color .15s; }
+    .lb-avatar { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; }
+    .lb-avatar-cat { border-radius: 11px; background: var(--surface-3); border: 1px solid var(--border); font-size: 17px; }
+    .lb-main { min-width: 0; }
+    .lb-title { display: block; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: color .15s; }
     .lb-title:hover { color: var(--blue); }
     .lb-sub { font-size: 11px; color: var(--subtle); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .lb-value { font-size: 13px; color: var(--text); font-family: var(--mono); font-weight: 700; flex-shrink: 0; text-align: right; white-space: nowrap; }
-    .lb-value small { color: var(--subtle); font-weight: 500; }
+    .lb-bar { height: 4px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin-top: 7px; }
+    .lb-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--violet)); transition: width .6s cubic-bezier(.4,0,.2,1); }
+    .lb-value { text-align: right; white-space: nowrap; flex-shrink: 0; }
+    .lb-value b { display: block; font-family: var(--mono); font-size: 13.5px; font-weight: 700; color: var(--text); }
+    .lb-value span { display: block; font-size: 9.5px; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 3px; }
+    .lb-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+    .lb-empty-ico { display: block; font-size: 28px; margin-bottom: 10px; opacity: .85; }
+    @media (max-width: 520px) {
+      .lb-row { grid-template-columns: 28px 32px minmax(0, 1fr) auto; gap: 9px; padding: 10px 6px; }
+      .lb-rank { width: 28px; height: 28px; font-size: 11.5px; }
+      .lb-avatar { width: 32px; height: 32px; font-size: 15px; }
+      .lb-tab { padding: 8px 11px; font-size: 12px; }
+    }
+
 
     .profile-left .card { transition: border-color .18s, box-shadow .18s, transform .18s; }
     .profile-left .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
@@ -654,44 +682,65 @@
     <div id="tab-leaderboard" style="display:none">
       <button class="back-link" onclick="switchTab('browse')">← Back to Petitions</button>
 
-      <div class="lb-hero">
-        <div class="lb-hero-glow"></div>
-        <div class="lb-hero-pill"><span class="live-dot"></span> Live Rankings</div>
-        <h2>Community <span>Leaderboard</span></h2>
-        <p>The most impactful petitions and the wallets behind them — ranked live, straight from the chain.</p>
-      </div>
+      <div class="lb-wrap">
+        <div class="lb-hero">
+          <div class="lb-hero-glow"></div>
+          <div class="lb-hero-pill"><span class="live-dot"></span> Live Rankings</div>
+          <h2>Community <span>Leaderboard</span></h2>
+          <p>The most impactful petitions and the wallets behind them — ranked live, straight from the chain.</p>
+        </div>
 
-      <div class="lb-spotlight">
-        <div class="lb-spot-head">
-          <span class="lb-spot-medal">🏆</span>
-          <div>
-            <div class="lb-spot-title">Trending Spotlight</div>
-            <div class="lb-spot-sub">Top 3 petitions by momentum right now</div>
+        <div class="lb-stats" id="lbStats">
+          <div class="lb-stat">
+            <div class="lb-stat-top"><span class="lb-stat-ico">📜</span><span class="lb-stat-label">Ranked</span></div>
+            <div class="lb-stat-num" id="lbStatRanked">—</div>
           </div>
-          <span class="lb-chip lb-chip-live">LIVE</span>
+          <div class="lb-stat">
+            <div class="lb-stat-top"><span class="lb-stat-ico">✍️</span><span class="lb-stat-label">Signatures</span></div>
+            <div class="lb-stat-num" id="lbStatSigs">—</div>
+          </div>
+          <div class="lb-stat">
+            <div class="lb-stat-top"><span class="lb-stat-ico">🏛️</span><span class="lb-stat-label">Creators</span></div>
+            <div class="lb-stat-num" id="lbStatCreators">—</div>
+          </div>
+          <div class="lb-stat">
+            <div class="lb-stat-top"><span class="lb-stat-ico">🔥</span><span class="lb-stat-label">Top Score</span></div>
+            <div class="lb-stat-num" id="lbStatTop">—</div>
+          </div>
         </div>
-        <div id="lbSpotlight" class="lb-podium"><div class="loading-state">Loading...</div></div>
-      </div>
 
-      <div class="leaderboard-grid">
-        <div class="card lb-card">
-          <div class="lb-card-head"><span class="lb-card-icon">🏆</span><div><div class="lb-card-title">Most Signed</div><div class="lb-card-sub">All time</div></div></div>
-          <div id="lbMostSigned"><div class="loading-state">Loading...</div></div>
+        <div class="lb-panel">
+          <div class="lb-panel-head">
+            <span class="lb-panel-ico">🏆</span>
+            <div>
+              <div class="lb-panel-title">Trending Spotlight</div>
+              <div class="lb-panel-sub">Top 3 petitions by momentum right now</div>
+            </div>
+            <span class="lb-chip lb-chip-live"><span class="live-dot"></span> LIVE</span>
+          </div>
+          <div id="lbSpotlight" class="lb-podium"><div class="lb-empty">Loading...</div></div>
         </div>
-        <div class="card lb-card">
-          <div class="lb-card-head"><span class="lb-card-icon">🏛️</span><div><div class="lb-card-title">Top Creators</div><div class="lb-card-sub">By signatures earned</div></div></div>
-          <div id="lbTopCreators"><div class="loading-state">Loading...</div></div>
-        </div>
-        <div class="card lb-card">
-          <div class="lb-card-head"><span class="lb-card-icon">💪</span><div><div class="lb-card-title">Top Signers</div><div class="lb-card-sub">Most active wallets</div></div></div>
-          <div id="lbTopSigners"><div class="loading-state">Fetching signer data...</div></div>
-        </div>
-        <div class="card lb-card">
-          <div class="lb-card-head"><span class="lb-card-icon">📈</span><div><div class="lb-card-title">Trending Now</div><div class="lb-card-sub">Fastest moving</div></div></div>
-          <div id="lbTrending"><div class="loading-state">Loading...</div></div>
+
+        <div class="lb-panel">
+          <div class="lb-panel-head">
+            <span class="lb-panel-ico">📊</span>
+            <div>
+              <div class="lb-panel-title" id="lbBoardTitle">Most Signed</div>
+              <div class="lb-panel-sub" id="lbBoardSub">All-time signature leaders</div>
+            </div>
+            <span class="lb-chip">TOP 10</span>
+          </div>
+          <div class="lb-tabs" id="lbTabs">
+            <button class="lb-tab active" data-board="mostSigned" onclick="switchLbBoard('mostSigned')"><span class="lb-tab-ico">🏆</span> Most Signed</button>
+            <button class="lb-tab" data-board="trending" onclick="switchLbBoard('trending')"><span class="lb-tab-ico">📈</span> Trending Now</button>
+            <button class="lb-tab" data-board="creators" onclick="switchLbBoard('creators')"><span class="lb-tab-ico">🏛️</span> Top Creators</button>
+            <button class="lb-tab" data-board="signers" onclick="switchLbBoard('signers')"><span class="lb-tab-ico">💪</span> Top Signers</button>
+          </div>
+          <div class="lb-list" id="lbList"><div class="lb-empty"><span class="lb-empty-ico">⏳</span>Loading rankings...</div></div>
         </div>
       </div>
     </div>
+
   </div>
 
   <div class="modal-overlay" id="createModal" onclick="if(event.target===this) closeCreateModal()">
@@ -1819,77 +1868,126 @@
       }
     }
 
+    const LB_CAT_ICONS = { "Environment":"🌿","Human Rights":"🕊️","Animal Welfare":"🐾","Education":"🎓","Healthcare":"⚕️","Politics":"🏛️","Technology":"💻","Community":"🤝","Other":"📜" };
+    const LB_BOARD_META = {
+      mostSigned: { title: "Most Signed", sub: "All-time signature leaders" },
+      trending:   { title: "Trending Now", sub: "Open petitions gaining the most support" },
+      creators:   { title: "Top Creators", sub: "Wallets ranked by signatures earned" },
+      signers:    { title: "Top Signers", sub: "The most active wallets on the platform" }
+    };
+
+    // Rendered row HTML per board, filled by renderLeaderboard() and swapped in
+    // instantly by switchLbBoard() — no refetching when changing tabs.
+    let lbBoards = {};
+    let lbBoard = "mostSigned";
+
     function lbRankBadge(i) {
       const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
       return `<span class="lb-rank ${cls}">${i + 1}</span>`;
     }
-    function lbAvatarForPetition(p) {
-      const icon = { "Environment":"🌿","Human Rights":"🕊️","Animal Welfare":"🐾","Education":"🎓","Healthcare":"⚕️","Politics":"🏛️","Technology":"💻","Community":"🤝","Other":"📜" }[p.category] || "📜";
-      return `<span class="lb-avatar lb-avatar-cat">${icon}</span>`;
+    function lbBar(value, max) {
+      const pct = max > 0 ? Math.max(4, Math.round((value / max) * 100)) : 0;
+      return `<div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%"></div></div>`;
     }
-    function lbPetitionRow(i, title, value, id, p) {
-      return `<div class="lb-row">${lbRankBadge(i)}${lbAvatarForPetition(p)}
-        <div class="lb-main"><span class="lb-title" onclick="openPetitionDetail(${id})">${escHtml(title)}</span></div>
-        <span class="lb-value">${escHtml(value)}</span>
+    function lbPetitionRow(i, p, value, unit, max) {
+      const icon = LB_CAT_ICONS[p.category] || "📜";
+      return `<div class="lb-row">${lbRankBadge(i)}
+        <span class="lb-avatar lb-avatar-cat">${icon}</span>
+        <div class="lb-main">
+          <span class="lb-title" onclick="openPetitionDetail(${Number(p.id)})">${escHtml(p.title)}</span>
+          <div class="lb-sub">${escHtml(p.category)}</div>
+          ${lbBar(value, max)}
+        </div>
+        <div class="lb-value"><b>${value.toLocaleString()}</b><span>${unit}</span></div>
       </div>`;
     }
-    function lbProfileRow(i, title, value, addr, sub) {
-      const initials = (title.replace(/^@/, "").slice(0, 2) || "?w").toUpperCase();
+    function lbProfileRow(i, name, addr, value, unit, sub, max) {
+      const initials = (name.replace(/^@/, "").slice(0, 2) || "0x").toUpperCase();
       return `<div class="lb-row">${lbRankBadge(i)}
         <span class="lb-avatar">${escHtml(initials)}</span>
         <div class="lb-main">
-          <span class="lb-title" onclick="viewPublicProfile('${addr}', true)">${escHtml(title)}</span>
-          ${sub ? `<div class="lb-sub">${escHtml(sub)}</div>` : ""}
+          <span class="lb-title" onclick="viewPublicProfile('${addr}', true)">${escHtml(name)}</span>
+          <div class="lb-sub">${escHtml(sub || short(addr))}</div>
+          ${lbBar(value, max)}
         </div>
-        <span class="lb-value">${escHtml(value)}</span>
+        <div class="lb-value"><b>${value.toLocaleString()}</b><span>${unit}</span></div>
       </div>`;
     }
-    function lbPod(rankCls, rankLabel, crown, title, sigs, id) {
-      return `<div class="lb-pod lb-pod-${rankCls}">
-        <div class="lb-pod-crown">${crown}</div>
-        <span class="lb-pod-rank ${rankCls === 1 ? "gold" : rankCls === 2 ? "silver" : "bronze"}">${rankLabel}</span>
-        <div class="lb-pod-title" onclick="openPetitionDetail(${id})">${escHtml(title)}</div>
-        <div class="lb-pod-sigs"><b>${Number(sigs).toLocaleString()}</b> sigs</div>
-        <div class="lb-pod-bar"><div class="lb-pod-bar-fill"></div></div>
+    function lbPod(rank, label, p) {
+      const icon = LB_CAT_ICONS[p.category] || "📜";
+      const medal = rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze";
+      return `<div class="lb-pod lb-pod-${rank}">
+        ${rank === 1 ? `<div class="lb-pod-crown">👑</div>` : ""}
+        <span class="lb-pod-av">${icon}</span>
+        <span class="lb-pod-rank ${medal}">${label}</span>
+        <div class="lb-pod-title" onclick="openPetitionDetail(${Number(p.id)})">${escHtml(p.title)}</div>
+        <div class="lb-pod-sigs"><b>${Number(p.signatureCount).toLocaleString()}</b> sigs</div>
+        <div class="lb-pod-bar"><div class="lb-pod-fill" style="width:${rank === 1 ? 100 : rank === 2 ? 66 : 40}%"></div></div>
       </div>`;
+    }
+    function lbEmpty(icon, msg) {
+      return `<div class="lb-empty"><span class="lb-empty-ico">${icon}</span>${msg}</div>`;
+    }
+
+    function switchLbBoard(board) {
+      lbBoard = board;
+      document.querySelectorAll("#lbTabs .lb-tab").forEach(el => {
+        el.classList.toggle("active", el.dataset.board === board);
+      });
+      const meta = LB_BOARD_META[board];
+      document.getElementById("lbBoardTitle").textContent = meta.title;
+      document.getElementById("lbBoardSub").textContent = meta.sub;
+      const listEl = document.getElementById("lbList");
+      if (listEl) listEl.innerHTML = lbBoards[board] || lbEmpty("⏳", "Loading rankings...");
     }
 
     async function renderLeaderboard() {
       const now = Math.floor(Date.now() / 1000);
+      const live = allPetitionsCache.filter(p => p.active);
 
-      const trendingAll = allPetitionsCache
-        .filter(p => p.active && Number(p.deadline) > now && Number(p.signatureCount) > 0)
+      // ── Stat strip ──
+      const totalSigs = live.reduce((sum, p) => sum + Number(p.signatureCount), 0);
+      const creatorCount = new Set(live.filter(p => p.creator).map(p => p.creator.toLowerCase())).size;
+      const topScore = live.reduce((max, p) => Math.max(max, Number(p.signatureCount)), 0);
+      document.getElementById("lbStatRanked").textContent = live.length.toLocaleString();
+      document.getElementById("lbStatSigs").textContent = totalSigs.toLocaleString();
+      document.getElementById("lbStatCreators").textContent = creatorCount.toLocaleString();
+      document.getElementById("lbStatTop").textContent = topScore.toLocaleString();
+
+      // ── Spotlight podium ──
+      const trendingAll = live
+        .filter(p => Number(p.deadline) > now && Number(p.signatureCount) > 0)
         .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount));
 
       const spotlightEl = document.getElementById("lbSpotlight");
       const top3 = trendingAll.slice(0, 3);
       if (spotlightEl) {
         if (top3.length === 0) {
-          spotlightEl.innerHTML = `<div class="empty" style="padding:24px"><div class="empty-icon">🏆</div><h3>No trending petitions yet</h3><p>Sign something or create a petition to get it on the board.</p></div>`;
+          spotlightEl.innerHTML = lbEmpty("🏆", "No trending petitions yet — sign or create one to get on the board.");
         } else {
+          const ghost = `<div class="lb-pod lb-pod-ghost">Open slot</div>`;
           spotlightEl.innerHTML = [
-            top3[1] ? lbPod(2, "2ND", "", top3[1].title, top3[1].signatureCount, Number(top3[1].id)) : `<div class="lb-pod"></div>`,
-            lbPod(1, "1ST", "👑", top3[0].title, top3[0].signatureCount, Number(top3[0].id)),
-            top3[2] ? lbPod(3, "3RD", "", top3[2].title, top3[2].signatureCount, Number(top3[2].id)) : `<div class="lb-pod"></div>`
+            top3[1] ? lbPod(2, "2ND", top3[1]) : ghost,
+            lbPod(1, "1ST", top3[0]),
+            top3[2] ? lbPod(3, "3RD", top3[2]) : ghost
           ].join("");
         }
       }
 
-      const trendingEl = document.getElementById("lbTrending");
-      const trending = trendingAll.slice(0, 5);
-      trendingEl.innerHTML = trending.length
-        ? trending.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id), p)).join("")
-        : `<div class="loading-state" style="padding:16px 0">No trending petitions yet.</div>`;
+      // ── Board: most signed ──
+      const mostSigned = [...live].sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount)).slice(0, 10);
+      lbBoards.mostSigned = mostSigned.length
+        ? mostSigned.map((p, i) => lbPetitionRow(i, p, Number(p.signatureCount), "sigs", Number(mostSigned[0].signatureCount))).join("")
+        : lbEmpty("📜", "No petitions yet.");
 
-      const mostSignedEl = document.getElementById("lbMostSigned");
-      const mostSigned = allPetitionsCache
-        .filter(p => p.active)
-        .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount))
-        .slice(0, 5);
-      mostSignedEl.innerHTML = mostSigned.length
-        ? mostSigned.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id), p)).join("")
-        : `<div class="loading-state" style="padding:16px 0">No petitions yet.</div>`;
+      // ── Board: trending ──
+      const trending = trendingAll.slice(0, 10);
+      lbBoards.trending = trending.length
+        ? trending.map((p, i) => lbPetitionRow(i, p, Number(p.signatureCount), "sigs", Number(trending[0].signatureCount))).join("")
+        : lbEmpty("📈", "No trending petitions yet.");
+      switchLbBoard(lbBoard);
 
+      // ── Board: top creators ──
       const creatorMap = new Map();
       allPetitionsCache.forEach(p => {
         if (!p.creator) return;
@@ -1899,19 +1997,20 @@
         entry.sigs += Number(p.signatureCount);
         creatorMap.set(key, entry);
       });
-      const topCreators = [...creatorMap.values()].sort((a, b) => b.sigs - a.sigs).slice(0, 5);
-      const creatorsEl = document.getElementById("lbTopCreators");
+      const topCreators = [...creatorMap.values()].sort((a, b) => b.sigs - a.sigs).slice(0, 10);
       if (topCreators.length) {
         const rows = await Promise.all(topCreators.map(async (c, i) => {
           const name = await getProfileName(c.addr);
-          return lbProfileRow(i, name ? "@" + name : short(c.addr), `${Number(c.sigs).toLocaleString()} sigs`, c.addr, `${c.count} created`);
+          return lbProfileRow(i, name ? "@" + name : short(c.addr), c.addr, c.sigs, "sigs",
+            `${c.count} petition${c.count !== 1 ? "s" : ""} created`, topCreators[0].sigs);
         }));
-        creatorsEl.innerHTML = rows.join("");
+        lbBoards.creators = rows.join("");
       } else {
-        creatorsEl.innerHTML = `<div class="loading-state" style="padding:16px 0">No creators yet.</div>`;
+        lbBoards.creators = lbEmpty("🏛️", "No creators yet.");
       }
+      if (lbBoard === "creators") switchLbBoard("creators");
 
-      const signersEl = document.getElementById("lbTopSigners");
+      // ── Board: top signers ──
       const candidates = allPetitionsCache.filter(p => Number(p.signatureCount) > 0);
       const signerCounts = new Map();
       for (const p of candidates) {
@@ -1921,17 +2020,20 @@
           signerCounts.set(key, (signerCounts.get(key) || 0) + 1);
         });
       }
-      const topSigners = [...signerCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const topSigners = [...signerCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
       if (topSigners.length) {
         const rows = await Promise.all(topSigners.map(async ([addr, count], i) => {
           const name = await getProfileName(addr);
-          return lbProfileRow(i, name ? "@" + name : short(addr), `${count} sig${count !== 1 ? "s" : ""}`, addr);
+          return lbProfileRow(i, name ? "@" + name : short(addr), addr, count,
+            `sig${count !== 1 ? "s" : ""}`, null, topSigners[0][1]);
         }));
-        signersEl.innerHTML = rows.join("");
+        lbBoards.signers = rows.join("");
       } else {
-        signersEl.innerHTML = `<div class="loading-state" style="padding:16px 0">No signatures yet.</div>`;
+        lbBoards.signers = lbEmpty("💪", "No signatures yet.");
       }
+      if (lbBoard === "signers") switchLbBoard("signers");
     }
+
 
     // ─────────────────────────────────────────
     // Theme toggle (light / dark)
