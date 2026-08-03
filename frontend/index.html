@@ -224,7 +224,7 @@
     .lb-spotlight { padding: 24px; margin: 0 auto 24px; max-width: 900px; }
     .lb-podium { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 14px; align-items: end; }
     .lb-pod { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; min-width: 0; }
-    .lb-pod-crown { font-size: 26px; line-height: 1; }
+    .lb-pod-crown { font-size: 26px; line-height: 1; height: 26px; display: flex; align-items: center; justify-content: center; }
     .lb-pod-rank { font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; padding: 3px 12px; border-radius: 999px; }
     .lb-pod-rank.gold { background: rgba(246,196,83,0.14); color: #F6C453; border: 1px solid rgba(246,196,83,0.35); }
     .lb-pod-rank.silver { background: rgba(174,182,194,0.12); color: #AEB6C2; border: 1px solid rgba(174,182,194,0.3); }
@@ -241,24 +241,25 @@
     @media (max-width: 600px) { .lb-podium { gap: 8px; } .lb-pod-title { font-size: 12px; } }
 
     /* ── Leaderboard cards ── */
-    .lb-card { padding: 22px; }
+    .lb-card { padding: 22px; display: flex; flex-direction: column; }
     .lb-card-head { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 15px; font-weight: 700; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); letter-spacing: -0.2px; }
     .lb-card-icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: var(--blue-dim); border: 1px solid var(--blue-border); font-size: 15px; flex-shrink: 0; }
     .lb-chip { margin-left: auto; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.4px; color: var(--subtle); background: var(--surface-2); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
     .lb-chip-live { color: var(--success); background: var(--success-dim); border-color: transparent; }
 
-    .lb-row { display: flex; align-items: center; gap: 12px; padding: 11px 6px; border-bottom: 1px solid var(--border); }
+    .lb-row { display: flex; align-items: center; gap: 10px; padding: 11px 6px; border-bottom: 1px solid var(--border); }
     .lb-row:last-child { border-bottom: none; }
-    .lb-rank { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--subtle); background: var(--surface-2); border: 1px solid var(--border); flex-shrink: 0; }
+    .lb-rank { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; font-family: var(--display); font-size: 12px; font-weight: 700; color: var(--subtle); background: var(--surface-2); border: 1px solid var(--border); flex-shrink: 0; }
     .lb-rank.gold { background: rgba(246,196,83,0.14); color: #F6C453; border-color: rgba(246,196,83,0.35); }
     .lb-rank.silver { background: rgba(174,182,194,0.12); color: #AEB6C2; border-color: rgba(174,182,194,0.3); }
     .lb-rank.bronze { background: rgba(205,139,94,0.14); color: #CD8B5E; border-color: rgba(205,139,94,0.35); }
     .lb-avatar { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .lb-avatar-cat { border-radius: 9px; background: var(--surface-3); border: 1px solid var(--border); font-size: 14px; }
     .lb-main { flex: 1; min-width: 0; }
     .lb-title { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: color .15s; }
     .lb-title:hover { color: var(--blue); }
     .lb-sub { font-size: 11px; color: var(--subtle); margin-top: 3px; }
-    .lb-value { font-size: 13px; color: var(--text); font-family: var(--mono); font-weight: 700; flex-shrink: 0; }
+    .lb-value { font-size: 13px; color: var(--text); font-family: var(--mono); font-weight: 700; flex-shrink: 0; text-align: right; white-space: nowrap; }
     .lb-value small { color: var(--subtle); font-weight: 500; }
     .lb-track { flex: 1; min-width: 0; height: 4px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
     .lb-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--violet)); border-radius: 999px; transition: width .5s ease; }
@@ -1804,8 +1805,12 @@
       const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
       return `<span class="lb-rank ${cls}">${i + 1}</span>`;
     }
-    function lbPetitionRow(i, title, value, id) {
-      return `<div class="lb-row">${lbRankBadge(i)}
+    function lbAvatarForPetition(p) {
+      const icon = { "Environment":"🌿","Human Rights":"🕊️","Animal Welfare":"🐾","Education":"🎓","Healthcare":"⚕️","Politics":"🏛️","Technology":"💻","Community":"🤝","Other":"📜" }[p.category] || "📜";
+      return `<span class="lb-avatar lb-avatar-cat">${icon}</span>`;
+    }
+    function lbPetitionRow(i, title, value, id, p) {
+      return `<div class="lb-row">${lbRankBadge(i)}${lbAvatarForPetition(p)}
         <div class="lb-main"><span class="lb-title" onclick="openPetitionDetail(${id})">${escHtml(title)}</span></div>
         <span class="lb-value">${escHtml(value)}</span>
       </div>`;
@@ -1823,7 +1828,7 @@
     }
     function lbPod(rankCls, rankLabel, crown, title, sigs, id) {
       return `<div class="lb-pod lb-pod-${rankCls}">
-        ${crown}
+        <div class="lb-pod-crown">${crown}</div>
         <span class="lb-pod-rank ${rankCls === 1 ? "gold" : rankCls === 2 ? "silver" : "bronze"}">${rankLabel}</span>
         <div class="lb-pod-title" onclick="openPetitionDetail(${id})">${escHtml(title)}</div>
         <div class="lb-pod-sigs"><b>${Number(sigs).toLocaleString()}</b> sigs</div>
@@ -1846,7 +1851,7 @@
         } else {
           spotlightEl.innerHTML = [
             top3[1] ? lbPod(2, "2ND", "", top3[1].title, top3[1].signatureCount, Number(top3[1].id)) : `<div class="lb-pod"></div>`,
-            lbPod(1, "1ST", `<div class="lb-pod-crown">👑</div>`, top3[0].title, top3[0].signatureCount, Number(top3[0].id)),
+            lbPod(1, "1ST", "👑", top3[0].title, top3[0].signatureCount, Number(top3[0].id)),
             top3[2] ? lbPod(3, "3RD", "", top3[2].title, top3[2].signatureCount, Number(top3[2].id)) : `<div class="lb-pod"></div>`
           ].join("");
         }
@@ -1855,7 +1860,7 @@
       const trendingEl = document.getElementById("lbTrending");
       const trending = trendingAll.slice(0, 5);
       trendingEl.innerHTML = trending.length
-        ? trending.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id))).join("")
+        ? trending.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id), p)).join("")
         : `<div class="loading-state" style="padding:16px 0">No trending petitions yet.</div>`;
 
       const mostSignedEl = document.getElementById("lbMostSigned");
@@ -1864,7 +1869,7 @@
         .sort((a, b) => Number(b.signatureCount) - Number(a.signatureCount))
         .slice(0, 5);
       mostSignedEl.innerHTML = mostSigned.length
-        ? mostSigned.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id))).join("")
+        ? mostSigned.map((p, i) => lbPetitionRow(i, p.title, `${Number(p.signatureCount).toLocaleString()} sigs`, Number(p.id), p)).join("")
         : `<div class="loading-state" style="padding:16px 0">No petitions yet.</div>`;
 
       const creatorMap = new Map();
