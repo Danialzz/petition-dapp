@@ -26,7 +26,7 @@ async function main() {
   console.log("✅ ProfileRegistry deployed to:", registryAddress);
 
   console.log("\n──────────────────────────────────────────────");
-  console.log("  Paste these into frontend/js/config.js");
+  console.log("  Paste these into docs/index.html");
   console.log("──────────────────────────────────────────────");
   console.log(`  CONTRACT_ADDRESS         = "${platformAddress}"`);
   console.log(`  PROFILE_CONTRACT_ADDRESS = "${registryAddress}"`);
