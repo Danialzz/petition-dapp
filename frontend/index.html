@@ -1334,6 +1334,25 @@
       return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
 
+    function formatCountdown(deadline, now) {
+      const diff = Number(deadline) - now;
+      if (diff <= 0) return "Ended";
+      const days = Math.floor(diff / 86400);
+      const hours = Math.floor((diff % 86400) / 3600);
+      const mins = Math.ceil((diff % 3600) / 60);
+      if (days > 0) return `Ends in ${days}d ${hours}h`;
+      if (hours > 0) return `Ends in ${hours}h ${mins}m`;
+      return `Ends in ${mins}m`;
+    }
+
+    function refreshCountdowns() {
+      const now = Math.floor(Date.now() / 1000);
+      document.querySelectorAll("[data-countdown]").forEach(el => {
+        el.textContent = formatCountdown(el.dataset.countdown, now);
+      });
+    }
+    setInterval(refreshCountdowns, 60000);
+
     function renderPetition(p, now, isTrending) {
       const id = Number(p.id);
       const deadline = Number(p.deadline);
@@ -1341,13 +1360,12 @@
       const isOwner = !!walletAddress && !!ownerAddress && walletAddress.toLowerCase() === ownerAddress.toLowerCase();
       const isCreator = !!walletAddress && walletAddress.toLowerCase() === p.creator.toLowerCase();
       const canRemove = isOwner || isCreator;
-      const daysLeft = Math.ceil((deadline - now) / 86400);
       const sigCount = Number(p.signatureCount);
       const sigGoal = Number(p.signatureGoal || 0);
       const catIcon = { "Environment":"🌿","Human Rights":"🕊️","Animal Welfare":"🐾","Education":"🎓","Healthcare":"⚕️","Politics":"🏛️","Technology":"💻","Community":"🤝","Other":"📜" }[p.category] || "📜";
 
       let statusBadge = isOpen
-        ? `<span class="badge badge-open">● Open · ${daysLeft}d left</span>`
+        ? `<span class="badge badge-open">● <span data-countdown="${deadline}">${formatCountdown(deadline, now)}</span></span>`
         : p.active ? `<span class="badge badge-closed">Closed</span>` : `<span class="badge badge-removed">Removed</span>`;
 
       let trendingBadge = isTrending ? `<span class="badge badge-trending">🔥 Trending</span>` : "";
@@ -1473,7 +1491,7 @@
       const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
 
       let statusBadge = isOpen
-        ? `<span class="badge badge-open">● Open · ${Math.ceil((deadline - now) / 86400)}d left</span>`
+        ? `<span class="badge badge-open">● <span data-countdown="${deadline}">${formatCountdown(deadline, now)}</span></span>`
         : p.active ? `<span class="badge badge-closed">Closed</span>` : `<span class="badge badge-removed">Removed</span>`;
 
       let actionBtn = "";
@@ -1507,7 +1525,7 @@
           </div>
           <div class="detail-meta-item">
             <div class="detail-meta-label">Deadline</div>
-            <div class="detail-meta-value">${formatDate(deadline)}</div>
+            <div class="detail-meta-value"><span data-countdown="${deadline}">${formatCountdown(deadline, now)}</span> <span style="color:var(--muted); font-size:11px;">(${formatDate(deadline)})</span></div>
           </div>
           <div class="detail-meta-item">
             <div class="detail-meta-label">Petition ID</div>
