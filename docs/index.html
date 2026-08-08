@@ -1293,7 +1293,8 @@
       highlightPetitionFromUrl();
     }
 
-    // Deep-link support: ?petition=3 scrolls to and highlights that petition.
+    // Deep-link support: ?petition=3 scrolls to, highlights, and opens that petition.
+    let deepLinkPetitionOpened = false;
     function highlightPetitionFromUrl() {
       const params = new URLSearchParams(window.location.search);
       const targetId = params.get("petition");
@@ -1303,6 +1304,10 @@
         el.classList.add("highlighted");
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         setTimeout(() => el.classList.remove("highlighted"), 2600);
+      }
+      if (!deepLinkPetitionOpened) {
+        deepLinkPetitionOpened = true;
+        openPetitionDetail(targetId);
       }
     }
 
