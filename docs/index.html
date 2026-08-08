@@ -496,9 +496,14 @@
     .empty { text-align: center; padding: 64px 20px; color: var(--muted); }
     .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.5; }
     .empty h3 { font-family: var(--display); font-size: 17px; margin-bottom: 8px; color: var(--text); font-weight: 700; }
+    .empty p { max-width: 380px; margin: 0 auto; font-size: 14px; line-height: 1.55; }
+    .empty-actions { margin-top: 22px; }
+    .empty-actions .btn-primary { width: auto; margin: 0 auto; display: inline-flex; align-items: center; justify-content: center; }
     .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border-strong); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+    .loading-title { color: var(--text); font-weight: 600; margin-top: 10px; font-size: 15px; }
+    .loading-sub { font-size: 12px; color: var(--subtle); margin-top: 6px; }
 
     /* ── Toast ── */
     #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 13px 22px; font-size: 13px; font-weight: 500; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; box-shadow: var(--shadow-lg); max-width: 90vw; white-space: normal; text-align: center; }
@@ -762,7 +767,7 @@
                 <option value="mostSigned">Most Signed</option>
               </select>
             </div>
-            <div id="petitionList"><div class="loading-state"><span class="spinner"></span> Loading petitions...</div></div>
+            <div id="petitionList"><div class="loading-state"><span class="spinner"></span><div class="loading-title">Loading petitions</div><div class="loading-sub">Reading on-chain data…</div></div></div>
           </div>
         </div>
 
@@ -1188,13 +1193,13 @@
 
     async function loadPetitions() {
       const list = document.getElementById("petitionList");
-      list.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading petitions...</div>';
+      list.innerHTML = '<div class="loading-state"><span class="spinner"></span><div class="loading-title">Loading petitions</div><div class="loading-sub">Reading on-chain data…</div></div>';
       try {
         const activeContract = contract || readContract;
         const total = Number(await activeContract.getTotalPetitions());
         if (total === 0) {
           allPetitionsCache = [];
-          list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>Be the first — <a href="#" onclick="goToProfile(event)">create one from your profile</a>.</p></div>';
+          list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>There are no petitions on the platform yet. Be the first to start one and rally support.</p><div class="empty-actions"><button class="btn-primary btn-sm" onclick="openCreateModal(event)">Start the first petition</button></div></div>';
           return;
         }
         const petitions = [];
@@ -1218,7 +1223,7 @@
         allPetitionsCache = petitions;
         applyFilters();
       } catch (err) {
-        list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Failed to load</h3><p>${err.message}</p></div>`;
+        list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Failed to load petitions</h3><p>We couldn't read the chain right now. Check your connection and try again.</p><div class="empty-actions"><button class="btn-primary btn-sm" onclick="loadPetitions()">Try again</button></div></div>`;
       }
     }
 
@@ -1279,8 +1284,8 @@
 
       if (filtered.length === 0) {
         const emptyMsg = status === "removed"
-          ? `<div class="empty"><div class="empty-icon">🗂️</div><h3>No removed petitions</h3><p>Nothing has been removed from the platform.</p></div>`
-          : `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>Try a different search or filter.</p></div>`;
+          ? `<div class="empty"><div class="empty-icon">🗂️</div><h3>No removed petitions</h3><p>Nothing has been removed from the platform. Clean list!</p></div>`
+          : `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>No petitions match your search or filters. Try clearing them to see everything.</p></div>`;
         list.innerHTML = emptyMsg;
         const resultsEl = document.getElementById("filterResults");
         if (resultsEl) resultsEl.textContent = "0 results";
