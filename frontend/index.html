@@ -1154,7 +1154,7 @@
     const PROFILE_CONTRACT_ADDRESS = "0xc88181798d0F235Ba3AfD85007Fb2B05075842d4";
     const PROFILE_ABI = [
       "function setProfile(string,string) external",
-      "function getProfile(address) external view returns (string username, string bio, bool exists, uint256 updatedAt)"
+      "function getProfile(address) external view returns (string username, string bio, uint256 updatedAt, bool exists)"
     ];
 
     let profileContract, profileReadContract;
