@@ -23,8 +23,8 @@ petition-dapp/
 │   └── deploy.js               # Hardhat deploy script
 ├── test/
 │   └── PetitionPlatform.test.js # Full test suite
-├── frontend/
-│   └── index.html              # Browser dApp (no build step)
+├── docs/
+│   └── index.html              # Browser dApp (no build step) — served on GitHub Pages
 ├── hardhat.config.js
 ├── package.json
 ├── .env.example
@@ -64,7 +64,7 @@ const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS_HERE";
 with your deployed contract address.
 
 ### 6. Open the frontend
-Open `frontend/index.html` directly in your browser — no server needed.
+Open `docs/index.html` directly in your browser — no server needed.
 
 ---
 
