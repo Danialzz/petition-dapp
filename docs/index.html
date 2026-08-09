@@ -1655,7 +1655,8 @@
         await loadPetitions();
         await loadStats();
       } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
+        showToast("❌ " + friendlyError(err), "error");
+        if (err.reason || err.message) console.error("create failed:", err);
       } finally {
         btn.textContent = "Create Petition on Base";
         btn.disabled = false;
@@ -1748,7 +1749,7 @@
           loadDetailSigners(idNum);
         }
       } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
+        showToast("❌ " + friendlyError(err), "error");
         const pending = optimisticSigns.get(idNum);
         if (pending) {
           const currentPetition = allPetitionsCache.find(x => Number(x.id) === idNum);
@@ -1856,7 +1857,7 @@
         await loadPetitions();
         await loadStats();
       } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed"), "error");
+        showToast("❌ " + friendlyError(err), "error");
       }
     }
 
@@ -1990,7 +1991,7 @@
         profileNameCache[walletAddress.toLowerCase()] = username || null;
         await loadProfileInfo(walletAddress, true);
       } catch (err) {
-        showToast("❌ " + (err.reason || err.message || "Failed to save profile"), "error");
+        showToast("❌ " + friendlyError(err), "error");
       } finally {
         btn.textContent = "Save Profile";
         btn.disabled = false;
@@ -2553,6 +2554,40 @@
       toastTimer = setTimeout(() => { el.className = ""; }, 4500);
     }
 
+    // Convert a raw provider/wallet error into a short, human-friendly message.
+    function friendlyError(err, fallback = "Something went wrong — please try again") {
+      if (!err) return fallback;
+
+      // Wallet rejection (MetaMask 4001, ethers ACTION_REJECTED, etc.)
+      const code = err.code;
+      const anyMsg = [err.message, err.reason, err.shortMessage, err.error?.message, String(err)].filter(Boolean).join(" ");
+      if (code === 4001 || code === "ACTION_REJECTED" || /user (rejected|denied|cancelled|canceled|cancel)|declined the (request|transaction)/i.test(anyMsg)) {
+        return "You rejected the transaction";
+      }
+
+      const lower = anyMsg.toLowerCase();
+      if (lower.includes("insufficient funds")) return "Insufficient funds for gas";
+      if (lower.includes("already signed")) return "You already signed this petition";
+      if (lower.includes("deadline has passed")) return "This petition has closed";
+      if (lower.includes("petition has been removed") || lower.includes("petition already removed")) return "This petition has been removed";
+      if (lower.includes("username already taken")) return "That username is already taken";
+      if (lower.includes("only the platform owner")) return "Only the platform owner or creator can do that";
+      if (lower.includes("must provide a reason")) return "A removal reason is required";
+      if (lower.includes("nonce too low") || lower.includes("nonce has already been used")) return "Transaction already sent — please try again";
+      if (lower.includes("gas required exceeds") || lower.includes("intrinsic gas too low") || lower.includes("out of gas")) return "Transaction ran out of gas";
+
+      // Extract a clean revert reason embedded in long messages.
+      const reverted = anyMsg.match(/execution reverted(?: with reason string)?:?\s*["']?([^"'\n\[]+)/i);
+      if (reverted && reverted[1] && reverted[1].trim()) return reverted[1].trim();
+
+      // Last resort: a shortened version of the technical message.
+      const clean = lower.replace(/\s+/g, " ").trim();
+      if (clean && clean !== "[object object]") {
+        return clean.length > 140 ? clean.slice(0, 137).trimEnd() + "…" : clean;
+      }
+      return fallback;
+    }
+
     // ─────────────────────────────────────────
     // Custom wallet picker (EIP-6963 + fallback)
     // ─────────────────────────────────────────
@@ -2701,7 +2736,7 @@
         });
       } catch (err) {
         console.error("Connection failed:", err);
-        showToast("❌ " + (err.message || "Connection failed"), "error");
+        showToast("❌ " + friendlyError(err, "Connection failed"), "error");
       }
     }
 
