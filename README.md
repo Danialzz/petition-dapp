@@ -18,7 +18,8 @@
 - ✅ **Creator control** — creators can remove their own petitions at any time
 - ✅ **On-chain profiles** — username + bio identities via a separate `ProfileRegistry`
 - ✅ **Live countdowns** — cards and detail views show real-time time remaining
-- ✅ **Shareable deep links** — `?petition=ID` opens a petition directly
+- ✅ **Shareable deep links** — `?petition=ID` opens a petition and `?profile=0x…` opens a profile directly
+- ✅ **Batched loading** — petitions load in small batches with a "Load more" button for older ones
 - ✅ **Read-only browsing** — no wallet needed to explore; only actions (create/sign) require one
 
 ## 🧱 Smart Contracts
@@ -122,6 +123,7 @@ Open `docs/index.html` and update the two address constants:
 const CONTRACT_ADDRESS = "YOUR_PLATFORM_ADDRESS";
 const PROFILE_CONTRACT_ADDRESS = "YOUR_PROFILE_REGISTRY_ADDRESS";
 ```
+Network switching (RPC, chain ID, explorer links) is controlled by the **NETWORK CONFIG** block at the top — flip `IS_MAINNET` to point the app at Base Mainnet instead of Base Sepolia.
 
 Open `docs/index.html` directly in your browser — no build step, no server needed.
 

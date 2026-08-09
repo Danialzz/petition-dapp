@@ -548,6 +548,7 @@
     }
     @media (max-width: 400px) {
       .network-badge { display: none !important; }
+      .nav-brand-meta { display: none; } /* keep just the logo mark so the nav fits on very narrow screens */
       .nav-link-btn { padding: 0 10px; font-size: 12px; }
       .wallet-pill { padding: 0 10px; font-size: 12px; }
     }
@@ -1798,7 +1799,7 @@
 
       try {
         const tx = await contract.createPetition(title, desc, category, duration, goal);
-        showToast("⏳ Transaction sent — confirming...", "");
+        showToast("⏳ Creating — confirming...", "");
         await tx.wait();
         showToast("✅ Petition created on Base!", "success");
         document.getElementById("newTitle").value = "";
@@ -1819,7 +1820,6 @@
         await loadStats();
       } catch (err) {
         showToast("❌ " + friendlyError(err), "error");
-        if (err.reason || err.message) console.error("create failed:", err);
       } finally {
         btn.textContent = "Create Petition on Base";
         btn.disabled = false;
@@ -1882,7 +1882,7 @@
 
     async function signPetition(id) {
       if (!contract || !walletAddress) {
-        showToast("🔗 Connect a wallet first to sign this petition.", "");
+        showToast("Connect your wallet to sign this petition.", "");
         openWalletModal();
         return;
       }
@@ -2701,7 +2701,7 @@
       walletAllowsCreate = false;
       updateCreateBtnState();
 
-      showToast("👋 Wallet disconnected", "");
+      showToast("👋 Wallet disconnected.", "");
 
       // Petitions remain visible in read-only mode — only actions (sign/create/remove) need a wallet.
       loadPetitions();
