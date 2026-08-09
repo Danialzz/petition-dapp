@@ -125,6 +125,56 @@ const PROFILE_CONTRACT_ADDRESS = "YOUR_PROFILE_REGISTRY_ADDRESS";
 
 Open `docs/index.html` directly in your browser — no build step, no server needed.
 
+## 🌐 Deploying to Base Mainnet
+
+> ⚠️ **Do not deploy to mainnet until you have tested everything thoroughly on Sepolia first.** Mainnet transactions cost real ETH and cannot be reverted.
+
+### Pre-deployment checklist
+
+- [ ] **Test thoroughly on Sepolia first** — create, sign, remove, and profile flows all working against the live Sepolia deployment
+- [ ] **Run the local test suite**: `npx hardhat compile` and `npx hardhat test` both pass
+- [ ] **Fund the deployer wallet** with real ETH on Base Mainnet (bridge from Ethereum or obtain directly)
+- [ ] **Confirm the `PRIVATE_KEY` in `.env`** is the wallet you want to own the platform (it becomes the platform owner)
+- [ ] **Have a `BASESCAN_API_KEY`** ready for source verification
+- [ ] **Keep your `.env` safe** — never commit it
+
+### Deploy command
+
+```bash
+npm run deploy:mainnet
+```
+
+The deploy script prints the new `CONTRACT_ADDRESS` and `PROFILE_CONTRACT_ADDRESS`, plus the exact `npx hardhat verify --network base ...` commands.
+
+### Verify the contracts on Basescan
+
+```bash
+npx hardhat verify --network base <PetitionPlatform address>
+npx hardhat verify --network base <ProfileRegistry address>
+```
+
+### What to change in the frontend after deployment
+
+Open `docs/index.html` and change three things:
+
+1. **Set `IS_MAINNET = true`** (in the NETWORK CONFIG block near the top). This switches the RPC URL, chain ID, wallet network-switch prompt, and all explorer links to Base Mainnet automatically.
+2. **Replace `CONTRACT_ADDRESS`** with the new `PetitionPlatform` address.
+3. **Replace `PROFILE_CONTRACT_ADDRESS`** with the new `ProfileRegistry` address.
+
+### Reminder: update Basescan links
+
+After deployment, every explorer link must point to **Base Mainnet**, not Sepolia:
+
+- ❌ `https://sepolia.basescan.org/...`
+- ✅ `https://basescan.org/...`
+
+With `IS_MAINNET = true`, the frontend explorer links update automatically — but double-check anywhere that still hardcodes Sepolia URLs:
+
+- The **deployed addresses table** and **network badge** in this README
+- Any other `sepolia.basescan.org` links in code or docs
+
+The current Sepolia deployment stays live and untouched — you can switch back any time by setting `IS_MAINNET = false`.
+
 ## 🕹️ How To Use
 
 ### Create a petition

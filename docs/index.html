@@ -667,7 +667,7 @@
       <div class="nav-utils">
         <div class="network-badge" id="networkBadge" title="Base Sepolia RPC status">
           <div class="network-dot" id="networkDot"></div>
-          <span>Base Sepolia</span>
+          <span id="networkLabel">Base Sepolia</span>
         </div>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Toggle light and dark theme" title="Toggle theme">
           <svg class="ti ti-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -699,7 +699,7 @@
     <div class="hero-glow"></div>
     <div class="hero-layout">
       <div class="hero-copy">
-        <div class="live-pill"><span class="live-dot"></span> Public infrastructure on Base Sepolia</div>
+        <div class="live-pill"><span class="live-dot"></span><span id="livePillText">Public infrastructure on Base Sepolia</span></div>
         <h1>Turn your voice into <span>public proof.</span></h1>
         <p>Start movements, rally support, and create an unchangeable record of collective action. Every petition and signature is transparent, verifiable, and yours.</p>
         <div class="hero-cta">
@@ -713,7 +713,7 @@
         </div>
       </div>
       <div class="impact-visual" aria-hidden="true">
-        <div class="floating-chip one"><span class="float-icon">✓</span><span><b>Signature verified</b><br>Base Sepolia · just now</span></div>
+        <div class="floating-chip one"><span class="float-icon">✓</span><span><b>Signature verified</b><br><span id="chipNetwork">Base Sepolia · just now</span></span></div>
         <div class="floating-chip two"><span class="float-icon">↗</span><span><b>Built for impact</b><br>Transparent by design</span></div>
         <div class="impact-card">
           <div class="impact-card-top"><span class="impact-eyebrow">Movement preview</span><span class="impact-status"><span class="live-dot"></span> Accepting signatures</span></div>
@@ -1102,7 +1102,7 @@
           PetitionBase
         </div>
         <p class="footer-tagline">A decentralized petition platform on Base. Every signature lives forever on-chain — no company owns it, no one can quietly delete it.</p>
-        <div class="footer-trust"><span>● Base Sepolia</span><span>✓ Onchain verified</span><span>0% platform fee</span></div>
+        <div class="footer-trust"><span id="footerNetwork">● Base Sepolia</span><span>✓ Onchain verified</span><span>0% platform fee</span></div>
       </div>
       <div class="footer-col">
         <div class="footer-heading">Platform</div>
@@ -1133,8 +1133,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
   <script>
-    const CONTRACT_ADDRESS = "0x7F7AE9E9104679d41AA66C17a7a15bECAC5AE44B";
-    const BASE_SEPOLIA_CHAIN_ID = "0x14A34";
+    // ──────────────────────────────────────────────────────
+    // NETWORK CONFIG — switch between Base Sepolia and Base
+    // Mainnet here.
+    //
+    // To go live on Base Mainnet:
+    //   1. Deploy the contracts (see README → "Deploying to
+    //      Base Mainnet") and verify them on Basescan.
+    //   2. Set IS_MAINNET = true below.
+    //   3. Replace CONTRACT_ADDRESS / PROFILE_CONTRACT_ADDRESS
+    //      further down with your mainnet deploy addresses.
+    // Everything else (RPC, chain ID, explorer links, labels)
+    // updates automatically from IS_MAINNET.
+    // ──────────────────────────────────────────────────────
+    const IS_MAINNET = false; // false = Base Sepolia (live), true = Base Mainnet
+    const NETWORK_RPC_URL      = IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org";
+    const NETWORK_CHAIN_ID     = IS_MAINNET ? 8453 : 84532;
+    const NETWORK_CHAIN_ID_HEX = IS_MAINNET ? "0x2105" : "0x14A34";
+    const NETWORK_CHAIN_NAME   = IS_MAINNET ? "Base Mainnet" : "Base Sepolia";
+    const NETWORK_CHAIN_FULL   = IS_MAINNET ? "Base" : "Base Sepolia Testnet";
+    const EXPLORER_URL         = IS_MAINNET ? "https://basescan.org" : "https://sepolia.basescan.org";
 
     const ABI = [
       "function createPetition(string,string,string,uint256,uint256) external returns (uint256)",
@@ -1171,13 +1189,18 @@
     let trendingIdsGlobal = new Set();
     const optimisticSigns = new Map();
 
-    // Read-only connection to Base Sepolia's public RPC — lets anyone browse
-    // petitions without connecting a wallet. Only signing/creating/removing
-    // requires an actual connected wallet (see connectWithWallet()).
+    // Deployed contract addresses. These are the LIVE Base Sepolia addresses —
+    // replace both with your mainnet deploy addresses when going live.
+    const CONTRACT_ADDRESS = "0x7F7AE9E9104679d41AA66C17a7a15bECAC5AE44B";
+
+    // Read-only connection to the configured network's public RPC — lets
+    // anyone browse petitions without connecting a wallet. Only
+    // signing/creating/removing requires an actual connected wallet (see
+    // connectWithWallet()).
     // Separate, standalone contract for optional username/bio profiles.
     // Deploy independently — deploying or redeploying this NEVER touches
     // PetitionPlatform or any existing petition data.
-    const PROFILE_CONTRACT_ADDRESS = "0xc88181798d0F235Ba3AfD85007Fb2B05075842d4";
+    const PROFILE_CONTRACT_ADDRESS = "0xc88181798d0F235Ba3AfD85007Fb2B05075842d4"; // TODO mainnet: replace after deploy
     const PROFILE_ABI = [
       "function setProfile(string,string) external",
       "function getProfile(address) external view returns (string username, string bio, uint256 updatedAt, bool exists)"
@@ -1187,13 +1210,28 @@
     const profileNameCache = {}; // lowercased address -> username string | null (fetched, none set) | undefined (not fetched yet)
 
     function initReadOnlyContract() {
-      readOnlyProvider = new ethers.JsonRpcProvider("https://sepolia.base.org");
+      readOnlyProvider = new ethers.JsonRpcProvider(NETWORK_RPC_URL);
       readContract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, readOnlyProvider);
       if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
         profileReadContract = new ethers.Contract(ethers.getAddress(PROFILE_CONTRACT_ADDRESS), PROFILE_ABI, readOnlyProvider);
       }
     }
     initReadOnlyContract();
+
+    // Keep the in-UI network labels in sync with the configured network.
+    function initNetworkLabels() {
+      const badge = document.getElementById("networkBadge");
+      if (badge) badge.title = `${NETWORK_CHAIN_NAME} RPC status`;
+      const label = document.getElementById("networkLabel");
+      if (label) label.textContent = NETWORK_CHAIN_NAME;
+      const livePill = document.getElementById("livePillText");
+      if (livePill) livePill.textContent = `Public infrastructure on ${NETWORK_CHAIN_NAME}`;
+      const chipNetwork = document.getElementById("chipNetwork");
+      if (chipNetwork) chipNetwork.textContent = `${NETWORK_CHAIN_NAME} · just now`;
+      const footerNetwork = document.getElementById("footerNetwork");
+      if (footerNetwork) footerNetwork.textContent = `● ${NETWORK_CHAIN_NAME}`;
+    }
+    initNetworkLabels();
 
     async function checkNetworkStatus() {
       const badge = document.getElementById("networkBadge");
@@ -1523,7 +1561,7 @@
       let removeBtn = canRemove && p.active ? `<button class="btn-sm btn-remove" onclick="openRemoveModal(${id})">Remove</button>` : "";
 
       const progress = getProgressInfo(sigCount, sigGoal);
-      const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
+      const explorerUrl = `${EXPLORER_URL}/address/${p.creator}`;
       const shareUrl = `${window.location.origin}${window.location.pathname}?petition=${id}`;
 
       return `
@@ -1583,7 +1621,7 @@
         const signers = await activeContract.getSigners(id);
         const html = signers.length === 0
           ? `<div class="signer-empty">No signatures yet.</div>`
-          : `<div class="signer-grid">${signers.map(a => `<a href="https://sepolia.basescan.org/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
+          : `<div class="signer-grid">${signers.map(a => `<a href="${EXPLORER_URL}/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
         signerListCache.set(id, html);
         panel.innerHTML = html;
       } catch (err) {
@@ -1630,7 +1668,7 @@
       const sigCount = Number(p.signatureCount);
       const sigGoal = Number(p.signatureGoal || 0);
       const progress = getProgressInfo(sigCount, sigGoal);
-      const explorerUrl = `https://sepolia.basescan.org/address/${p.creator}`;
+      const explorerUrl = `${EXPLORER_URL}/address/${p.creator}`;
 
       let statusBadge = isOpen
         ? `<span class="badge badge-open">● <span data-countdown="${deadline}">${formatCountdown(deadline, now)}</span></span>`
@@ -1697,7 +1735,7 @@
         const signers = await activeContract.getSigners(id);
         const html = signers.length === 0
           ? `<div class="signer-empty">No signatures yet.</div>`
-          : `<div class="signer-grid">${signers.map(a => `<a href="https://sepolia.basescan.org/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
+          : `<div class="signer-grid">${signers.map(a => `<a href="${EXPLORER_URL}/address/${a}" target="_blank" rel="noopener" class="signer-chip">${short(a)}</a>`).join("")}</div>`;
         signerListCache.set(id, html);
         panel.innerHTML = html;
       } catch (err) {
@@ -2286,7 +2324,7 @@
     function viewProfileOnExplorer(event) {
       if (event) event.stopPropagation();
       if (!viewingProfileAddress) return;
-      window.open(`https://sepolia.basescan.org/address/${viewingProfileAddress}`, "_blank");
+      window.open(`${EXPLORER_URL}/address/${viewingProfileAddress}`, "_blank");
     }
 
     // For a public profile of someone else, we don't have a cached "signed"
@@ -2639,7 +2677,7 @@
     function viewOnExplorer(event) {
       event.stopPropagation();
       if (!walletAddress) return;
-      window.open(`https://sepolia.basescan.org/address/${walletAddress}`, "_blank");
+      window.open(`${EXPLORER_URL}/address/${walletAddress}`, "_blank");
       document.getElementById("walletDropdown").classList.remove("show");
     }
 
@@ -2820,10 +2858,10 @@
         // Switch network only after everything above has succeeded.
         try {
           const network = await provider.getNetwork();
-          if (Number(network.chainId) !== 84532) {
+          if (Number(network.chainId) !== NETWORK_CHAIN_ID) {
             await eip1193Provider.request({
               method: "wallet_switchEthereumChain",
-              params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }]
+              params: [{ chainId: NETWORK_CHAIN_ID_HEX }]
             });
           }
         } catch (switchErr) {
@@ -2832,15 +2870,15 @@
               await eip1193Provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
-                  chainId: BASE_SEPOLIA_CHAIN_ID,
-                  chainName: "Base Sepolia Testnet",
+                  chainId: NETWORK_CHAIN_ID_HEX,
+                  chainName: NETWORK_CHAIN_FULL,
                   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://sepolia.base.org"],
-                  blockExplorerUrls: ["https://sepolia.basescan.org"]
+                  rpcUrls: [NETWORK_RPC_URL],
+                  blockExplorerUrls: [EXPLORER_URL]
                 }]
               });
             } catch (addErr) {
-              console.warn("Could not add Base Sepolia automatically:", addErr);
+              console.warn(`Could not add ${NETWORK_CHAIN_NAME} automatically:`, addErr);
             }
           } else {
             console.warn("Could not switch network automatically:", switchErr);
@@ -2946,10 +2984,10 @@
     (function setupFooterLinks() {
       const contractLink = document.getElementById("footerContractLink");
       const profileLink = document.getElementById("footerProfileLink");
-      if (contractLink) contractLink.href = `https://sepolia.basescan.org/address/${CONTRACT_ADDRESS}`;
+      if (contractLink) contractLink.href = `${EXPLORER_URL}/address/${CONTRACT_ADDRESS}`;
       if (profileLink) {
         if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
-          profileLink.href = `https://sepolia.basescan.org/address/${PROFILE_CONTRACT_ADDRESS}`;
+          profileLink.href = `${EXPLORER_URL}/address/${PROFILE_CONTRACT_ADDRESS}`;
         } else {
           profileLink.style.display = "none";
         }

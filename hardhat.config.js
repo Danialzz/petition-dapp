@@ -14,11 +14,15 @@ module.exports = {
   },
   networks: {
     hardhat: {},
+    // Base Sepolia testnet — the currently live environment.
     baseSepolia: {
       url: "https://sepolia.base.org",
       chainId: 84532,
       accounts: [PRIVATE_KEY],
     },
+    // Base Mainnet — production. Only deploy here when ready (see README
+    // → "Deploying to Base Mainnet"). Requires real ETH for gas. For large
+    // deployments consider a dedicated RPC provider instead of the public one.
     base: {
       url: "https://mainnet.base.org",
       chainId: 8453,
@@ -41,7 +45,7 @@ module.exports = {
       },
       {
         network: "base",
-        chainId: 8453,
+        chainId: 8453, // Base Mainnet
         urls: {
           apiURL: "https://api.basescan.org/api",
           browserURL: "https://basescan.org",
