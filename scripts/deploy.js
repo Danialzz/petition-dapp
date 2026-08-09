@@ -32,9 +32,11 @@ async function main() {
   console.log(`  PROFILE_CONTRACT_ADDRESS = "${registryAddress}"`);
 
   if (network.name !== "hardhat" && network.name !== "localhost") {
-    console.log("\n  Verify on Basescan:");
-    console.log(`  npx hardhat verify --network ${network.name} ${platformAddress}`);
-    console.log(`  npx hardhat verify --network ${network.name} ${registryAddress}`);
+    console.log("\n  ──────────────────────────────────────────────");
+    console.log("  Verify on Basescan");
+    console.log("  ──────────────────────────────────────────────");
+    console.log(`  PetitionPlatform :  npx hardhat verify --network ${network.name} ${platformAddress}`);
+    console.log(`  ProfileRegistry  :  npx hardhat verify --network ${network.name} ${registryAddress}`);
   }
   console.log("──────────────────────────────────────────────");
 }

@@ -52,6 +52,17 @@
 
 > Contract addresses are baked into `docs/index.html` (`CONTRACT_ADDRESS` / `PROFILE_CONTRACT_ADDRESS`).
 
+### Verify on Basescan
+
+Verify the deployed contracts so their source code is readable and "Verified ✓" on Basescan. Requires `BASESCAN_API_KEY` in your `.env` (see [Quick Start](#quick-start)):
+
+```bash
+npx hardhat verify --network baseSepolia 0x7F7AE9E9104679d41AA66C17a7a15bECAC5AE44B
+npx hardhat verify --network baseSepolia 0xc88181798d0F235Ba3AfD85007Fb2B05075842d4
+```
+
+> For a fresh deployment, run the exact verify commands printed by `npm run deploy:testnet` — they include the newly deployed addresses automatically.
+
 ## 📁 Project Structure
 
 ```
