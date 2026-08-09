@@ -505,6 +505,13 @@
     .loading-title { color: var(--text); font-weight: 600; margin-top: 10px; font-size: 15px; }
     .loading-sub { font-size: 12px; color: var(--subtle); margin-top: 6px; }
 
+    /* ── Load more ── */
+    .load-more-wrap { text-align: center; padding: 6px 0 14px; }
+    .btn-load-more { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 11px 30px; border-radius: 10px; font-size: 13px; font-weight: 600; transition: border-color .15s, background-color .18s, color .15s; }
+    .btn-load-more:hover:not(:disabled) { border-color: var(--blue-border); background: var(--surface-3); color: var(--blue); }
+    .btn-load-more .spinner { width: 12px; height: 12px; border-width: 2px; }
+    .load-more-note { margin-top: 10px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
     /* ── Toast ── */
     #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 13px 22px; font-size: 13px; font-weight: 500; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; box-shadow: var(--shadow-lg); max-width: 90vw; white-space: normal; text-align: center; }
     #toast.show { transform: translateX(-50%) translateY(0); }
@@ -768,6 +775,10 @@
               </select>
             </div>
             <div id="petitionList"><div class="loading-state"><span class="spinner"></span><div class="loading-title">Loading petitions</div><div class="loading-sub">Reading on-chain data…</div></div></div>
+            <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+              <button class="btn-load-more" id="loadMoreBtn" onclick="loadMorePetitions()">Load more</button>
+              <div class="load-more-note" id="loadMoreNote"></div>
+            </div>
           </div>
         </div>
 
@@ -787,7 +798,7 @@
               <span class="mini-stat-label">Active Now</span>
             </div>
             <div class="mini-stat-num" id="statActive">—</div>
-            <div class="mini-stat-caption">Currently open for signatures</div>
+            <div class="mini-stat-caption" id="statActiveCaption">Currently open for signatures</div>
           </div>
           <div class="mini-stat-card">
             <div class="mini-stat-top">
@@ -795,7 +806,7 @@
               <span class="mini-stat-label">Total Signatures</span>
             </div>
             <div class="mini-stat-num" id="statSignatures">—</div>
-            <div class="mini-stat-caption">Across all petitions</div>
+            <div class="mini-stat-caption" id="statSigsCaption">Across all petitions</div>
           </div>
           </div>
           <div class="chart-card">
@@ -1147,6 +1158,15 @@
     let removePetitionId = null;
     let currentTab = "browse";
     let allPetitionsCache = [];
+    // Pagination: petitions are fetched newest-first in batches of PAGE_SIZE
+    // instead of loading the whole chain at once. totalPetitionCount is the
+    // on-chain total; allPetitionsCache holds only the newest petitions loaded
+    // so far, so filters/stats/leaderboards reflect the loaded set until more
+    // is loaded via "Load more" (or on-demand when needed).
+    const PAGE_SIZE = 12;
+    let totalPetitionCount = 0;
+    let isLoadingMore = false;
+    let allLoadPromise = null;
     let viewingProfileAddress = null;
     let trendingIdsGlobal = new Set();
     const optimisticSigns = new Map();
@@ -1192,51 +1212,153 @@
     checkNetworkStatus();
     setInterval(checkNetworkStatus, 30000);
 
-    async function loadPetitions(quiet = false) {
+    async function loadPetitions(quiet = false, batchSize = PAGE_SIZE) {
       const list = document.getElementById("petitionList");
       if (!quiet) list.innerHTML = '<div class="loading-state"><span class="spinner"></span><div class="loading-title">Loading petitions</div><div class="loading-sub">Reading on-chain data…</div></div>';
       try {
         const activeContract = contract || readContract;
-        const total = Number(await activeContract.getTotalPetitions());
-        if (total === 0) {
+        totalPetitionCount = Number(await activeContract.getTotalPetitions());
+        if (totalPetitionCount === 0) {
           allPetitionsCache = [];
           list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><h3>No petitions yet</h3><p>There are no petitions on the platform yet. Be the first to start one and rally support.</p><div class="empty-actions"><button class="btn-primary btn-sm" onclick="openCreateModal(event)">Start the first petition</button></div></div>';
+          updateLoadMore();
           return;
         }
-        const petitions = [];
-        for (let i = total; i >= 1; i--) {
-          const raw = await activeContract.getPetition(i);
-          const signed = walletAddress ? await activeContract.hasWalletSigned(i, walletAddress) : false;
-          petitions.push({
-            id: raw.id,
-            creator: raw.creator,
-            title: raw.title,
-            description: raw.description,
-            category: raw.category,
-            deadline: raw.deadline,
-            signatureCount: raw.signatureCount,
-            signatureGoal: raw.signatureGoal,
-            active: raw.active,
-            createdAt: raw.createdAt,
-            signed
-          });
-        }
-        allPetitionsCache = petitions;
-        optimisticSigns.forEach((pending, id) => {
-          const p = allPetitionsCache.find(x => Number(x.id) === Number(id));
-          if (p) {
-            if (Number(p.signatureCount) >= pending.optimisticCount && p.signed) {
-              optimisticSigns.delete(id);
-            } else {
-              p.signatureCount = pending.optimisticCount;
-              p.signed = true;
-            }
-          }
-        });
+        // Only fetch the newest batch (newest petition has the highest id).
+        const count = Math.max(1, Math.min(batchSize, totalPetitionCount));
+        const batch = await fetchPetitionBatch(totalPetitionCount, count);
+        allPetitionsCache = batch;
+        applyOptimisticSignsToCache();
         applyFilters();
+        updateLoadMore();
+        loadStats();
       } catch (err) {
         list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Failed to load petitions</h3><p>We couldn't read the chain right now. Check your connection and try again.</p><div class="empty-actions"><button class="btn-primary btn-sm" onclick="loadPetitions()">Try again</button></div></div>`;
       }
+    }
+
+    // Fetch `count` petitions with the highest ids, ending at `startId`
+    // (descending order — the newest petition is the highest id).
+    async function fetchPetitionBatch(startId, count) {
+      const activeContract = contract || readContract;
+      const batch = [];
+      for (let i = startId; i > startId - count; i--) {
+        const raw = await activeContract.getPetition(i);
+        const signed = walletAddress ? await activeContract.hasWalletSigned(i, walletAddress) : false;
+        batch.push({
+          id: raw.id,
+          creator: raw.creator,
+          title: raw.title,
+          description: raw.description,
+          category: raw.category,
+          deadline: raw.deadline,
+          signatureCount: raw.signatureCount,
+          signatureGoal: raw.signatureGoal,
+          active: raw.active,
+          createdAt: raw.createdAt,
+          signed
+        });
+      }
+      return batch;
+    }
+
+    // Fold any in-flight optimistic sign updates into the (possibly partial) cache.
+    function applyOptimisticSignsToCache() {
+      optimisticSigns.forEach((pending, id) => {
+        const p = allPetitionsCache.find(x => Number(x.id) === Number(id));
+        if (p) {
+          if (Number(p.signatureCount) >= pending.optimisticCount && p.signed) {
+            optimisticSigns.delete(id);
+          } else {
+            p.signatureCount = pending.optimisticCount;
+            p.signed = true;
+          }
+        }
+      });
+    }
+
+    async function loadMorePetitions() {
+      if (isLoadingMore) return;
+      if (allPetitionsCache.length >= totalPetitionCount) { updateLoadMore(); return; }
+      // A background full-load (profile/leaderboard) already covers everything.
+      if (allLoadPromise) { await allLoadPromise; updateLoadMore(); return; }
+      isLoadingMore = true;
+      updateLoadMore();
+      try {
+        const remaining = totalPetitionCount - allPetitionsCache.length;
+        const startId = totalPetitionCount - allPetitionsCache.length;
+        const batch = await fetchPetitionBatch(startId, Math.min(PAGE_SIZE, remaining));
+        allPetitionsCache = allPetitionsCache.concat(batch);
+        applyOptimisticSignsToCache();
+        applyFilters();
+      } catch (err) {
+        showToast("❌ Couldn't load more petitions. Please try again.", "error");
+      } finally {
+        isLoadingMore = false;
+        updateLoadMore();
+      }
+    }
+
+    // Silently fetch every remaining batch so the cache is complete. Used by
+    // views that need the full picture (profile lists, leaderboard, deep links).
+    // Serialized via allLoadPromise so concurrent triggers never overlap.
+    function ensureAllLoaded() {
+      if (allPetitionsCache.length >= totalPetitionCount) return Promise.resolve();
+      if (!allLoadPromise) {
+        allLoadPromise = (async () => {
+          while (allPetitionsCache.length < totalPetitionCount) {
+            const remaining = totalPetitionCount - allPetitionsCache.length;
+            const startId = totalPetitionCount - allPetitionsCache.length;
+            const batch = await fetchPetitionBatch(startId, Math.min(PAGE_SIZE, remaining));
+            allPetitionsCache = allPetitionsCache.concat(batch);
+          }
+          applyOptimisticSignsToCache();
+        })().finally(() => { allLoadPromise = null; });
+      }
+      return allLoadPromise;
+    }
+
+    // Deep links (?petition=N) can point at older petitions that aren't in the
+    // first batch — keep loading batches until the target is loaded (or everything is).
+    async function ensurePetitionLoaded(id) {
+      while (allPetitionsCache.length < totalPetitionCount && !allPetitionsCache.some(p => Number(p.id) === Number(id))) {
+        if (allLoadPromise) { await allLoadPromise; continue; }
+        const remaining = totalPetitionCount - allPetitionsCache.length;
+        const startId = totalPetitionCount - allPetitionsCache.length;
+        const batch = await fetchPetitionBatch(startId, Math.min(PAGE_SIZE, remaining));
+        allPetitionsCache = allPetitionsCache.concat(batch);
+      }
+      applyOptimisticSignsToCache();
+      applyFilters();
+      updateLoadMore();
+    }
+
+    function hasActiveFilters() {
+      const search = document.getElementById("searchInput");
+      const category = document.getElementById("categoryFilter");
+      const status = document.getElementById("statusFilter");
+      if (!search || !category || !status) return false;
+      return !!(search.value.trim() || category.value || status.value);
+    }
+
+    function updateLoadMore() {
+      const wrap = document.getElementById("loadMoreWrap");
+      const btn = document.getElementById("loadMoreBtn");
+      const note = document.getElementById("loadMoreNote");
+      if (!wrap || !btn || !note) return;
+      const loaded = allPetitionsCache.length;
+      if (totalPetitionCount === 0) { wrap.style.display = "none"; return; }
+      wrap.style.display = "block";
+      const hasMore = loaded < totalPetitionCount;
+      note.textContent = hasMore
+        ? (hasActiveFilters()
+            ? `Loaded ${loaded.toLocaleString()} of ${totalPetitionCount.toLocaleString()} — filters apply to loaded petitions`
+            : `Showing ${loaded.toLocaleString()} of ${totalPetitionCount.toLocaleString()} petitions`)
+        : `All ${totalPetitionCount.toLocaleString()} petitions shown`;
+      btn.style.display = hasMore ? "inline-flex" : "none";
+      btn.disabled = isLoadingMore;
+      if (isLoadingMore) btn.innerHTML = '<span class="spinner"></span> Loading...';
+      else btn.textContent = "Load more";
     }
 
     function applyFilters() {
@@ -1295,12 +1417,14 @@
       // "newest" is already the natural order from loadPetitions (highest id first)
 
       if (filtered.length === 0) {
+        const hasMore = allPetitionsCache.length < totalPetitionCount;
         const emptyMsg = status === "removed"
           ? `<div class="empty"><div class="empty-icon">🗂️</div><h3>No removed petitions</h3><p>Nothing has been removed from the platform. Clean list!</p></div>`
-          : `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>No petitions match your search or filters. Try clearing them to see everything.</p></div>`;
+          : `<div class="empty"><div class="empty-icon">🔍</div><h3>No matching petitions</h3><p>No petitions match your search or filters.${hasMore ? " Older petitions may still match — use “Load more” to keep searching." : " Try clearing them to see everything."}</p></div>`;
         list.innerHTML = emptyMsg;
         const resultsEl = document.getElementById("filterResults");
         if (resultsEl) resultsEl.textContent = "0 results";
+        updateLoadMore();
         return;
       }
 
@@ -1308,6 +1432,7 @@
       const resultsEl = document.getElementById("filterResults");
       if (resultsEl) resultsEl.textContent = `${filtered.length} result${filtered.length !== 1 ? "s" : ""}`;
       highlightPetitionFromUrl();
+      updateLoadMore();
     }
 
     // Deep-link support: ?petition=3 scrolls to, highlights, and opens that petition.
@@ -1743,7 +1868,7 @@
         await tx.wait();
         showToast("✅ Petition signed!", "success");
         await loadStats();
-        loadPetitions(true);
+        loadPetitions(true, allPetitionsCache.length || PAGE_SIZE);
         if (currentDetailId === idNum) {
           signerListCache.delete(idNum);
           loadDetailSigners(idNum);
@@ -1863,44 +1988,37 @@
 
     async function loadStats() {
       try {
-        // Prefer the already-loaded cache to avoid a second round of RPC calls.
-        if (allPetitionsCache.length > 0 || (contract || readContract)) {
-          const activeContract = contract || readContract;
-          const total = Number(await activeContract.getTotalPetitions());
-          document.getElementById("statTotal").textContent = total;
-          document.getElementById("statTotalHero").textContent = total;
+        // Total is a cheap single call and always accurate. Activity stats
+        // (active / signatures / wallets) come from the loaded cache so we
+        // never scan the whole chain — when only part is loaded the captions
+        // say so.
+        const activeContract = contract || readContract;
+        const total = Number(await activeContract.getTotalPetitions());
+        totalPetitionCount = total;
+        document.getElementById("statTotal").textContent = total;
+        document.getElementById("statTotalHero").textContent = total;
 
-          if (allPetitionsCache.length === total && total > 0) {
-            const now = Math.floor(Date.now() / 1000);
-            const activeP = allPetitionsCache.filter(p => p.active && Number(p.deadline) > now).length;
-            const totalSigs = allPetitionsCache.reduce((sum, p) => sum + Number(p.signatureCount), 0);
-            const wallets = new Set(allPetitionsCache.map(p => p.creator)).size;
-            applyStats(activeP, totalSigs, wallets);
-          } else if (total === 0) {
-            applyStats(0, 0, 0);
-          } else {
-            // Cache not populated yet (e.g. stats loaded before petitions) — fall back to direct fetch.
-            const now = Math.floor(Date.now() / 1000);
-            let activeP = 0, totalSigs = 0; const wallets = new Set();
-            for (let i = 1; i <= total; i++) {
-              const p = await activeContract.getPetition(i);
-              if (p.active && Number(p.deadline) > now) activeP++;
-              totalSigs += Number(p.signatureCount);
-              wallets.add(p.creator);
-            }
-            applyStats(activeP, totalSigs, wallets.size);
-          }
+        const now = Math.floor(Date.now() / 1000);
+        const activeP = allPetitionsCache.filter(p => p.active && Number(p.deadline) > now).length;
+        const totalSigs = allPetitionsCache.reduce((sum, p) => sum + Number(p.signatureCount), 0);
+        const wallets = new Set(allPetitionsCache.map(p => p.creator)).size;
+        applyStats(activeP, totalSigs, wallets);
 
-          function applyStats(activeP, totalSigs, wallets) {
-            document.getElementById("statActive").textContent = activeP;
-            document.getElementById("statSignatures").textContent = totalSigs.toLocaleString();
-            const aHero = document.getElementById("statActiveHero");
-            if (aHero) aHero.textContent = activeP;
-            const sHero = document.getElementById("statSigsHero");
-            if (sHero) sHero.textContent = totalSigs.toLocaleString();
-            const wHero = document.getElementById("statWalletsHero");
-            if (wHero) wHero.textContent = wallets.toLocaleString();
-          }
+        function applyStats(activeP, totalSigs, wallets) {
+          document.getElementById("statActive").textContent = activeP;
+          document.getElementById("statSignatures").textContent = totalSigs.toLocaleString();
+          const aHero = document.getElementById("statActiveHero");
+          if (aHero) aHero.textContent = activeP;
+          const sHero = document.getElementById("statSigsHero");
+          if (sHero) sHero.textContent = totalSigs.toLocaleString();
+          const wHero = document.getElementById("statWalletsHero");
+          if (wHero) wHero.textContent = wallets.toLocaleString();
+
+          const partial = total > 0 && allPetitionsCache.length < total;
+          const activeCaption = document.getElementById("statActiveCaption");
+          const sigsCaption = document.getElementById("statSigsCaption");
+          if (activeCaption) activeCaption.textContent = partial ? "Open among loaded petitions" : "Currently open for signatures";
+          if (sigsCaption) sigsCaption.textContent = partial ? "Across loaded petitions" : "Across all petitions";
         }
       } catch {}
     }
@@ -2212,6 +2330,13 @@
     async function renderProfile() {
       const target = viewingProfileAddress;
       if (!target) return;
+      // A profile lists every petition a wallet created/signed, so pull in the
+      // remaining batches once so counts and lists are complete.
+      if (totalPetitionCount > 0 && allPetitionsCache.length < totalPetitionCount) {
+        await ensureAllLoaded();
+        applyFilters();
+        return;
+      }
       const addrEl = document.getElementById("profileAddress");
       const avatarEl = document.getElementById("profileAvatar");
       if (!addrEl || !avatarEl) return;
@@ -2351,6 +2476,13 @@
     }
 
     async function renderLeaderboard() {
+      // Rankings should consider every petition, not just the loaded page —
+      // pull in the rest once so the boards are meaningful.
+      if (totalPetitionCount > 0 && allPetitionsCache.length < totalPetitionCount) {
+        await ensureAllLoaded();
+        applyFilters();
+        return;
+      }
       const now = Math.floor(Date.now() / 1000);
       const live = allPetitionsCache.filter(p => p.active);
 
@@ -2753,12 +2885,13 @@
     }, 600);
 
     // Anyone can browse petitions without connecting a wallet.
-    loadPetitions().then(() => {
+    loadPetitions().then(async () => {
       const params = new URLSearchParams(window.location.search);
       const profileParam = params.get("profile");
       if (profileParam) viewPublicProfile(profileParam, false);
+      const linkedId = params.get("petition");
+      if (linkedId) await ensurePetitionLoaded(Number(linkedId));
     });
-    loadStats();
   </script>
 
   <script>
