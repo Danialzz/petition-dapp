@@ -954,7 +954,7 @@
       button, input, select, textarea { touch-action: manipulation; }
 
       /* Nav — no overflow, larger tap targets */
-      nav { padding: 0 12px; }
+      nav { padding: 0 16px; }
       .nav-logo { gap: 8px; font-size: 13px; }
       .nav-logo .nav-dot { width: 22px; height: 22px; }
       .nav-right { gap: 8px; }
@@ -967,27 +967,29 @@
       .mobile-nav-menu { padding: 6px; }
       .mobile-nav-menu button { min-height: 46px; font-size: 14px; }
 
-      /* Hero — stack CTAs, breathable spacing */
-      .hero { padding: 48px 16px 40px; }
+      /* Hero — stack CTAs, breathable spacing, glow contained */
+      .hero { padding: 44px 16px 38px; overflow: hidden; }
+      .hero-glow { left: 50%; right: auto; top: -140px; width: 150%; height: 400px; transform: translateX(-50%); }
       .hero h1 { font-size: clamp(34px, 11.5vw, 46px); }
       .hero .sub, .hero p { font-size: 15.5px; margin-bottom: 24px; }
       .live-pill { margin-bottom: 20px; }
-      .hero-cta { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 28px; }
+      .hero-cta { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 26px; }
       .hero-cta .btn-hero { width: 100%; min-height: 48px; }
-      .hero-stats { padding: 18px 14px; gap: 16px 8px; }
+      .hero-stats { margin-top: 0; padding: 18px 14px; gap: 16px 8px; }
       .stat { padding: 0 8px; }
       .stat:first-child { padding-left: 8px; }
       .stat-num { font-size: 23px; }
 
-      /* Section + browse */
-      .main { padding: 0 14px; }
-      .section-heading-row { margin-bottom: 18px; }
+      /* Section + browse — full width, consistent gutter */
+      .main { width: 100%; max-width: 100%; padding: 0 16px; }
+      .section-heading-row { width: 100%; max-width: 100%; margin-bottom: 14px; }
       .section-heading { font-size: clamp(22px, 6.5vw, 26px); }
-      .cta-banner { padding: 18px 18px; flex-direction: column; align-items: stretch; }
+      .browse-grid, .browse-main, .browse-side { width: 100%; max-width: 100%; }
+      .cta-banner { width: 100%; max-width: 100%; padding: 16px 18px; flex-direction: column; align-items: stretch; margin-bottom: 12px; }
       .cta-banner .btn-primary { width: 100%; }
-      .filter-card { padding: 16px 14px 4px; }
+      .filter-card { width: 100%; max-width: 100%; padding: 14px 16px 4px; }
       .filter-head { margin-bottom: 12px; }
-      .filter-bar { gap: 8px; margin-bottom: 16px; }
+      .filter-bar { gap: 8px; margin-bottom: 14px; }
       input[type="text"], input[type="number"], select { font-size: 16px; min-height: 44px; }
       textarea { font-size: 16px; }
 
@@ -1000,7 +1002,7 @@
       .mini-stat-label, .chart-title { overflow-wrap: break-word; word-break: normal; }
 
       /* Petition cards */
-      .petition-card { padding: 18px 16px; margin-bottom: 12px; }
+      .petition-card { width: 100%; max-width: 100%; padding: 16px; margin-bottom: 10px; }
       .petition-title { font-size: 16px; }
       .petition-meta { margin-bottom: 14px; }
       .badge { padding: 3px 8px; }
@@ -1046,7 +1048,8 @@
       .profile-list-scroll { max-height: 320px; }
 
       /* Leaderboard */
-      .lb-hero { padding: 4px 0 22px; }
+      .lb-hero { padding: 2px 0 18px; overflow: hidden; }
+      .lb-hero-glow { left: 50%; right: auto; top: -120px; width: 150%; height: 320px; transform: translateX(-50%); }
       .lb-hero h2 { font-size: clamp(30px, 9vw, 38px); }
       .lb-stats { gap: 10px; margin-bottom: 16px; }
       .lb-stat { padding: 14px 12px; }
@@ -1065,25 +1068,28 @@
       .lb-value b { font-size: 12.5px; }
       .lb-empty { padding: 28px 16px; }
 
-      /* Footer */
-      .site-footer { margin-top: 72px; }
-      .footer-cta { padding: 32px 14px 0; }
-      .footer-cta-card { padding: 20px 18px; }
+      /* Footer — stack cleanly, no overflow */
+      .site-footer { margin-top: 56px; }
+      .footer-cta { width: 100%; max-width: 100%; padding: 26px 16px 0; }
+      .footer-cta-card { width: 100%; max-width: 100%; padding: 18px 18px; }
       .footer-cta-copy { gap: 12px; }
       .footer-cta-icon { flex: 0 0 38px; width: 38px; height: 38px; }
       .footer-cta h2 { font-size: 19px; }
       .footer-cta-card .btn-primary { min-height: 44px; }
-      .footer-inner { padding: 40px 18px 30px; gap: 26px; }
-      .footer-heading { margin-bottom: 12px; }
-      .footer-col a, .footer-col button { min-height: 40px; display: flex; align-items: center; margin-bottom: 4px; }
-      .footer-bottom { padding: 18px 18px max(20px, env(safe-area-inset-bottom)); gap: 8px; }
+      .footer-inner { width: 100%; max-width: 100%; grid-template-columns: 1fr 1fr; padding: 34px 16px 26px; gap: 26px 20px; }
+      .footer-heading { margin-bottom: 10px; }
+      .footer-col a, .footer-col button { min-height: 40px; display: flex; align-items: center; margin-bottom: 2px; }
+      .footer-bottom { width: 100%; max-width: 100%; padding: 16px 16px max(18px, env(safe-area-inset-bottom)); gap: 8px; }
 
       /* Toast */
       #toast { bottom: max(20px, env(safe-area-inset-bottom)); width: calc(100% - 32px); max-width: 400px; }
 
       /* Misc */
-      .loading-state { padding: 32px 16px; }
-      .empty { padding: 48px 16px; }
+      .loading-state { padding: 26px 16px; }
+      .empty { padding: 40px 16px; }
+    }
+    @media (max-width: 480px) {
+      .footer-inner { grid-template-columns: 1fr; gap: 22px; }
     }
     @media (max-width: 390px) {
       nav { padding: 0 10px; }
