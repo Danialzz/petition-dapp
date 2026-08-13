@@ -735,6 +735,28 @@
     .btn-sm { height: 32px; padding: 0 13px; font-size: 12.5px; border-radius: 8px; }
     .btn-cancel { height: 40px; padding: 0 16px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
     .btn-cancel:hover { background: var(--surface-3); }
+    /* ── WalletConnect (Reown) ── */
+    .wc-option { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; margin-bottom: 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; transition: border-color .15s, background-color .15s; }
+    .wc-option:hover { border-color: var(--blue-border); background: var(--surface-3); }
+    .wc-option-badge { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: #3396FF; flex-shrink: 0; }
+    .wc-option-badge svg { width: 17px; height: 17px; }
+    .wc-option-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+    .wc-option-sub { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+    .wc-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; color: var(--subtle); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+    .wc-divider::before, .wc-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .wc-qr-modal { text-align: center; }
+    .wc-qr-head { display: flex; align-items: center; gap: 13px; text-align: left; margin-bottom: 18px; }
+    .wc-qr-logo { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 12px; background: #3396FF; flex-shrink: 0; box-shadow: 0 6px 18px rgba(51,150,255,.28); }
+    .wc-qr-logo svg { width: 24px; height: 24px; }
+    .wc-qr-title { font: 700 15px/1.2 var(--display); letter-spacing: -.02em; }
+    .wc-qr-sub { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+    .wc-qr-box { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px; background: #fff; border-radius: 14px; margin-bottom: 18px; border: 1px solid var(--border-strong); }
+    .wc-qr-box canvas { display: block; max-width: 100%; height: auto; }
+    .wc-qr-loading { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; gap: 9px; flex-direction: column; color: var(--text); font-size: 13px; font-weight: 600; background: rgba(255,255,255,.97); border-radius: 14px; z-index: 2; }
+    .wc-qr-loading .spinner { width: 18px; height: 18px; border-width: 2.5px; border-top-color: #3396FF; }
+    .wc-qr-actions { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; }
+    .wc-qr-actions .btn-primary { height: 46px; padding: 0 18px; }
+    .wc-qr-actions .btn-cancel { height: 46px; padding: 0 14px; }
     .btn-load-more { height: 38px; padding: 0 22px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
     .btn-load-more:hover:not(:disabled) { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); }
     .btn-sign { height: 32px; min-width: 96px; font-size: 12.5px; border-radius: 8px; }
@@ -1023,6 +1045,10 @@
       .modal-overlay { align-items: flex-end; }
       .modal, .rules-modal .modal, .detail-modal { width: 100%; max-width: 100%; border-radius: 18px 18px 0 0; padding: 24px 18px max(24px, env(safe-area-inset-bottom)); max-height: 92vh; overscroll-behavior: contain; }
       .create-modal { max-height: 90vh; }
+      .wc-qr-head { margin-bottom: 16px; }
+      .wc-qr-actions { grid-template-columns: 1fr; }
+      .wc-qr-actions .btn-primary { order: 1; }
+      .wc-qr-actions .btn-cancel { order: 2; }
       .modal-close { top: 14px; right: 14px; width: 40px; height: 40px; }
       .modal-actions { gap: 10px; }
       .modal-actions .btn-primary, .modal-actions .btn-cancel { height: 46px; font-size: 14px; }
@@ -3111,6 +3137,10 @@
 
     function disconnectWallet(event) {
       event.stopPropagation();
+      if (wcProvider) {
+        try { wcProvider.removeAllListeners?.(); wcProvider.disconnect().catch(() => {}); } catch (_) {}
+        wcProvider = null;
+      }
       walletAddress = null;
       ownerAddress = null;
       provider = null;
@@ -3207,10 +3237,16 @@
       overlay.className = "modal-overlay";
       overlay.innerHTML = `
         <div class="modal">
+          <button class="modal-close" onclick="closeWalletModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           <h3>Connect a Wallet</h3>
           <p>Choose a wallet to connect to PetitionBase.</p>
-          <div id="walletPickerList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
-          <button class="btn-cancel" onclick="closeWalletModal()">Cancel</button>
+          <div id="walletPickerList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:6px;"></div>
+          <div class="wc-divider"><span>or pair with a phone</span></div>
+          <button class="wc-option" onclick="connectWithWalletConnect()">
+            <span class="wc-option-badge"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M22.5 6.8a10.6 10.6 0 0 0-15 0l-.5.5a.63.63 0 0 0 0 .9l1.6 1.6a.31.31 0 0 0 .45 0l.7-.7a7.4 7.4 0 0 1 10.4 0l.7.7a.31.31 0 0 0 .45 0l1.6-1.6a.63.63 0 0 0 0-.9l-.6-.5Zm-18.6 4.9a10.6 10.6 0 0 0 15 0l.5-.5a.63.63 0 0 1 .9 0l1.6 1.6a.31.31 0 0 1 0 .45l-.7.7a7.4 7.4 0 0 1-10.4 0l-.7-.7a.31.31 0 0 0-.45 0l-1.6 1.6a.63.63 0 0 1-.9 0l-.5-.5Zm-1.9 3.3 1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a7.4 7.4 0 0 0 5.2 2.2 7.4 7.4 0 0 0 5.2-2.2l1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a.63.63 0 0 1 0 .9l-1.3 1.3a10.6 10.6 0 0 1-15 0l-1.3-1.3a.63.63 0 0 1 0-.9Z"/></svg></span>
+            <span class="wc-option-copy"><span>WalletConnect</span><span class="wc-option-sub">Scan a QR code or pair with any mobile wallet</span></span>
+          </button>
+          <button class="btn-cancel" onclick="closeWalletModal()" style="width:100%;">Cancel</button>
         </div>`;
       document.body.appendChild(overlay);
       overlay.addEventListener("click", (e) => { if (e.target === overlay) closeWalletModal(); });
@@ -3222,7 +3258,7 @@
 
       if (detectedWallets.size === 0) {
         listEl.innerHTML = `<div style="color:var(--muted); font-size:13px; text-align:center; padding:12px 0;">
-          No wallet extensions detected. Install MetaMask, Coinbase Wallet, or another browser wallet to continue.
+          No wallet extension detected — use WalletConnect above to connect from your phone.
         </div>`;
         return;
       }
@@ -3252,91 +3288,217 @@
     async function connectWithWallet(uuid) {
       const entry = detectedWallets.get(uuid);
       if (!entry) return;
-      const eip1193Provider = entry.provider;
-
       closeWalletModal();
-
       try {
-        const accounts = await eip1193Provider.request({ method: "eth_requestAccounts" });
-        if (!accounts || accounts.length === 0) {
-          showToast("❌ No account returned. Try again.", "error");
-          return;
-        }
-
-        provider = new ethers.BrowserProvider(eip1193Provider);
-        signer = await provider.getSigner();
-        walletAddress = accounts[0];
-        contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
-        if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
-          profileContract = new ethers.Contract(ethers.getAddress(PROFILE_CONTRACT_ADDRESS), PROFILE_ABI, signer);
-        }
-        ownerAddress = await contract.owner();
-
-        document.getElementById("walletAddress").textContent = short(walletAddress);
-        document.getElementById("statusDot").classList.add("on");
-        document.getElementById("walletPill").classList.add("connected");
-        document.getElementById("connectBtn").style.display = "none";
-        walletAllowsCreate = true;
-        updateCreateBtnState();
-
-        showToast("✅ Wallet connected!", "success");
-        await loadPetitions();
-        await loadStats();
-
-        // Switch network only after everything above has succeeded.
-        try {
-          const network = await provider.getNetwork();
-          if (Number(network.chainId) !== NETWORK_CHAIN_ID) {
-            await eip1193Provider.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: NETWORK_CHAIN_ID_HEX }]
-            });
-          }
-        } catch (switchErr) {
-          if (switchErr.code === 4902) {
-            try {
-              await eip1193Provider.request({
-                method: "wallet_addEthereumChain",
-                params: [{
-                  chainId: NETWORK_CHAIN_ID_HEX,
-                  chainName: NETWORK_CHAIN_FULL,
-                  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-                  rpcUrls: [NETWORK_RPC_URL],
-                  blockExplorerUrls: [EXPLORER_URL]
-                }]
-              });
-            } catch (addErr) {
-              console.warn(`Could not add ${NETWORK_CHAIN_NAME} automatically:`, addErr);
-            }
-          } else {
-            console.warn("Could not switch network automatically:", switchErr);
-          }
-        }
-
-        // Keep UI state in sync if the user changes accounts or disconnects in their wallet.
-        eip1193Provider.on?.("accountsChanged", (accs) => {
-          if (!accs || accs.length === 0) {
-            walletAddress = null;
-            document.getElementById("walletAddress").textContent = "Not connected";
-            document.getElementById("statusDot").classList.remove("on");
-            document.getElementById("walletPill").classList.remove("connected");
-            document.getElementById("connectBtn").style.display = "block";
-            document.getElementById("connectBtn").textContent = "Connect Wallet";
-            if (currentTab === "profile") switchTab("browse");
-            walletAllowsCreate = false;
-            updateCreateBtnState();
-          } else {
-            walletAddress = accs[0];
-            document.getElementById("walletAddress").textContent = short(walletAddress);
-            loadPetitions();
-            loadStats();
-          }
-        });
+        await finalizeConnection(entry.provider);
       } catch (err) {
         console.error("Connection failed:", err);
         showToast("❌ " + friendlyError(err, "Connection failed"), "error");
       }
     }
+
+    // Shared post-connect setup for injected wallets AND WalletConnect: wire up
+    // ethers, contract, UI state, network switching and account listeners.
+    async function finalizeConnection(eip1193Provider, existingAccounts) {
+      provider = new ethers.BrowserProvider(eip1193Provider);
+      signer = await provider.getSigner();
+      const accounts = existingAccounts || await eip1193Provider.request({ method: "eth_requestAccounts" });
+      if (!accounts || accounts.length === 0) throw new Error("No account returned.");
+
+      walletAddress = accounts[0];
+      contract = new ethers.Contract(ethers.getAddress(CONTRACT_ADDRESS), ABI, signer);
+      if (PROFILE_CONTRACT_ADDRESS !== "YOUR_PROFILE_CONTRACT_ADDRESS_HERE") {
+        profileContract = new ethers.Contract(ethers.getAddress(PROFILE_CONTRACT_ADDRESS), PROFILE_ABI, signer);
+      }
+      ownerAddress = await contract.owner();
+
+      document.getElementById("walletAddress").textContent = short(walletAddress);
+      document.getElementById("statusDot").classList.add("on");
+      document.getElementById("walletPill").classList.add("connected");
+      document.getElementById("connectBtn").style.display = "none";
+      walletAllowsCreate = true;
+      updateCreateBtnState();
+
+      showToast("✅ Wallet connected!", "success");
+      await loadPetitions();
+      await loadStats();
+
+      // Switch network only after everything above has succeeded.
+      try {
+        const network = await provider.getNetwork();
+        if (Number(network.chainId) !== NETWORK_CHAIN_ID) {
+          await eip1193Provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: NETWORK_CHAIN_ID_HEX }]
+          });
+        }
+      } catch (switchErr) {
+        if (switchErr.code === 4902) {
+          try {
+            await eip1193Provider.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: NETWORK_CHAIN_ID_HEX,
+                chainName: NETWORK_CHAIN_FULL,
+                nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+                rpcUrls: [NETWORK_RPC_URL],
+                blockExplorerUrls: [EXPLORER_URL]
+              }]
+            });
+          } catch (addErr) {
+            console.warn(`Could not add ${NETWORK_CHAIN_NAME} automatically:`, addErr);
+          }
+        } else {
+          console.warn("Could not switch network automatically:", switchErr);
+        }
+      }
+
+      // Keep UI state in sync if the user changes accounts or disconnects in their wallet.
+      eip1193Provider.on?.("accountsChanged", (accs) => {
+        if (!accs || accs.length === 0) {
+          walletAddress = null;
+          document.getElementById("walletAddress").textContent = "Not connected";
+          document.getElementById("statusDot").classList.remove("on");
+          document.getElementById("walletPill").classList.remove("connected");
+          document.getElementById("connectBtn").style.display = "block";
+          document.getElementById("connectBtn").textContent = "Connect Wallet";
+          if (currentTab === "profile") switchTab("browse");
+          walletAllowsCreate = false;
+          updateCreateBtnState();
+        } else {
+          walletAddress = accs[0];
+          document.getElementById("walletAddress").textContent = short(walletAddress);
+          loadPetitions();
+          loadStats();
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────
+    // WalletConnect (Reown) — scan a QR code or
+    // pair with any WalletConnect-compatible mobile wallet.
+    // ─────────────────────────────────────────
+    const WC_PROJECT_ID = "53ae1c1db35129fa00631b4b986848b2";
+    const WC_PROVIDER_URL = "https://esm.sh/@walletconnect/ethereum-provider@2.13.0?bundle";
+    const WC_QRCODE_URL = "https://esm.sh/qrcode@1.5.3?bundle";
+    const WC_RPC_MAP = { 84532: "https://sepolia.base.org", 8453: "https://mainnet.base.org" };
+    const WC_OPTIONAL_CHAINS = [84532, 8453];
+    const WC_LOGO_URI = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="5.4" fill="#3396FF"/><path fill="#fff" d="M22.5 6.8a10.6 10.6 0 0 0-15 0l-.5.5a.63.63 0 0 0 0 .9l1.6 1.6a.31.31 0 0 0 .45 0l.7-.7a7.4 7.4 0 0 1 10.4 0l.7.7a.31.31 0 0 0 .45 0l1.6-1.6a.63.63 0 0 0 0-.9l-.6-.5Zm-18.6 4.9a10.6 10.6 0 0 0 15 0l.5-.5a.63.63 0 0 1 .9 0l1.6 1.6a.31.31 0 0 1 0 .45l-.7.7a7.4 7.4 0 0 1-10.4 0l-.7-.7a.31.31 0 0 0-.45 0l-1.6 1.6a.63.63 0 0 1-.9 0l-.5-.5Zm-1.9 3.3 1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a7.4 7.4 0 0 0 5.2 2.2 7.4 7.4 0 0 0 5.2-2.2l1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a.63.63 0 0 1 0 .9l-1.3 1.3a10.6 10.6 0 0 1-15 0l-1.3-1.3a.63.63 0 0 1 0-.9Z"/></svg>`
+    );
+    const WC_METADATA = {
+      name: "PetitionBase",
+      description: "Create and sign petitions that live forever on Base — transparent, verifiable, and censorship-resistant.",
+      url: "https://danialzz.github.io/petition-dapp/",
+      icons: [WC_LOGO_URI]
+    };
+    let wcProvider = null;
+    let wcUri = null;
+
+    async function connectWithWalletConnect() {
+      closeWalletModal();
+      try {
+        const { EthereumProvider } = await import(WC_PROVIDER_URL);
+        wcProvider = await EthereumProvider.init({
+          projectId: WC_PROJECT_ID,
+          chains: [NETWORK_CHAIN_ID],
+          optionalChains: WC_OPTIONAL_CHAINS,
+          rpcMap: WC_RPC_MAP,
+          metadata: WC_METADATA,
+          showQrModal: false
+        });
+        wcProvider.on("display_uri", (uri) => renderWalletConnectQr(uri));
+
+        // If a previous WalletConnect session was restored, accounts come back
+        // immediately — otherwise show the QR code for pairing.
+        if (!wcProvider.session) {
+          buildWalletConnectModal();
+          document.getElementById("wcQrOverlay").classList.add("show");
+        }
+
+        const accounts = await wcProvider.connect();
+        closeWalletConnectQrModal();
+        if (!accounts || accounts.length === 0) throw new Error("No account returned.");
+        await finalizeConnection(wcProvider, accounts);
+      } catch (err) {
+        console.error("WalletConnect failed:", err);
+        closeWalletConnectQrModal();
+        if (wcProvider) {
+          try { wcProvider.removeAllListeners?.(); await wcProvider.disconnect(); } catch (_) {}
+          wcProvider = null;
+        }
+        showToast("❌ " + friendlyError(err, "WalletConnect failed"), "error");
+      }
+    }
+
+    function buildWalletConnectModal() {
+      if (document.getElementById("wcQrOverlay")) return;
+      const overlay = document.createElement("div");
+      overlay.id = "wcQrOverlay";
+      overlay.className = "modal-overlay";
+      overlay.innerHTML = `
+        <div class="modal wc-qr-modal">
+          <button class="modal-close" onclick="closeWalletConnectQrModal()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          <div class="wc-qr-head">
+            <span class="wc-qr-logo"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M22.5 6.8a10.6 10.6 0 0 0-15 0l-.5.5a.63.63 0 0 0 0 .9l1.6 1.6a.31.31 0 0 0 .45 0l.7-.7a7.4 7.4 0 0 1 10.4 0l.7.7a.31.31 0 0 0 .45 0l1.6-1.6a.63.63 0 0 0 0-.9l-.6-.5Zm-18.6 4.9a10.6 10.6 0 0 0 15 0l.5-.5a.63.63 0 0 1 .9 0l1.6 1.6a.31.31 0 0 1 0 .45l-.7.7a7.4 7.4 0 0 1-10.4 0l-.7-.7a.31.31 0 0 0-.45 0l-1.6 1.6a.63.63 0 0 1-.9 0l-.5-.5Zm-1.9 3.3 1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a7.4 7.4 0 0 0 5.2 2.2 7.4 7.4 0 0 0 5.2-2.2l1.3-1.3a.31.31 0 0 1 .45 0l1.3 1.3a.63.63 0 0 1 0 .9l-1.3 1.3a10.6 10.6 0 0 1-15 0l-1.3-1.3a.63.63 0 0 1 0-.9Z"/></svg></span>
+            <div>
+              <div class="wc-qr-title">Scan with WalletConnect</div>
+              <div class="wc-qr-sub" id="wcQrSub">Pairing with your mobile wallet…</div>
+            </div>
+          </div>
+          <div class="wc-qr-box">
+            <canvas id="wcQrCanvas" width="248" height="248"></canvas>
+            <div class="wc-qr-loading" id="wcQrLoading"><span class="spinner"></span>Waiting for your wallet</div>
+          </div>
+          <div class="wc-qr-actions">
+            <button class="btn-primary" id="wcOpenBtn" onclick="openWalletConnectApp()">Open in Wallet</button>
+            <button class="btn-cancel" id="wcCopyBtn" onclick="copyWalletConnectUri()">Copy link</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) closeWalletConnectQrModal(); });
+    }
+
+    window.closeWalletConnectQrModal = function () {
+      const overlay = document.getElementById("wcQrOverlay");
+      if (overlay) overlay.classList.remove("show");
+    };
+
+    async function renderWalletConnectQr(uri) {
+      wcUri = uri;
+      const loading = document.getElementById("wcQrLoading");
+      const sub = document.getElementById("wcQrSub");
+      try {
+        const QRCode = (await import(WC_QRCODE_URL)).default;
+        await QRCode.toCanvas(document.getElementById("wcQrCanvas"), uri, {
+          width: 248, margin: 1, color: { dark: "#101216", light: "#ffffff" }
+        });
+        if (loading) loading.style.display = "none";
+        if (sub) sub.textContent = "Scan the code with any WalletConnect-compatible wallet.";
+      } catch (err) {
+        console.warn("QR render failed:", err);
+        if (loading) loading.style.display = "none";
+        if (sub) sub.textContent = "Couldn't render the QR code — use Copy link instead.";
+      }
+    }
+
+    window.openWalletConnectApp = function () {
+      if (!wcUri) return;
+      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = wcUri;
+      } else {
+        window.open("https://walletconnect.com/wc?uri=" + encodeURIComponent(wcUri), "_blank");
+      }
+    };
+
+    window.copyWalletConnectUri = function () {
+      if (!wcUri) return;
+      navigator.clipboard.writeText(wcUri).then(() => {
+        showToast("Link copied — paste it into your wallet.", "success");
+      }).catch(() => {
+        showToast("❌ Couldn't copy the link.", "error");
+      });
+    };
 
     // Fallback: if no EIP-6963 wallets ever announce (older wallet versions),
     // offer a plain window.ethereum connect after a short grace period.

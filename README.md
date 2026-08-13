@@ -21,6 +21,7 @@
 - ✅ **Shareable deep links** — `?petition=ID` opens a petition and `?profile=0x…` opens a profile directly
 - ✅ **Batched loading** — petitions load in small batches with a "Load more" button for older ones
 - ✅ **Read-only browsing** — no wallet needed to explore; only actions (create/sign) require one
+- ✅ **WalletConnect** — connect from any mobile wallet by scanning a QR code (Reown), no browser extension needed
 
 ## 🧱 Smart Contracts
 
@@ -188,6 +189,10 @@ The current Sepolia deployment stays live and untouched — you can switch back 
 1. Browse any open petition and click **Sign** (or open the detail modal)
 2. Confirm — your signature is recorded permanently, one per wallet
 
+## 🔗 WalletConnect (Reown)
+
+The app uses **Reown WalletConnect** so you can connect from any mobile wallet by scanning a QR code — no browser extension required. It is configured with the project ID `53ae1c1db35129fa00631b4b986848b2` in `docs/index.html` (`WC_PROJECT_ID`), registered in the [Reown Cloud](https://cloud.reown.com/) dashboard. Injected wallets (MetaMask, Coinbase Wallet, Rabby, etc.) continue to work as before via EIP-6963.
+
 ## 🙏 Tech Stack
 
 | Layer | Tool |
@@ -196,7 +201,7 @@ The current Sepolia deployment stays live and untouched — you can switch back 
 | Dev Framework | Hardhat |
 | Network | Base (L2 on Ethereum) / Base Sepolia testnet |
 | Frontend | Vanilla HTML/CSS/JS + ethers.js v6 |
-| Wallets | MetaMask, Coinbase Wallet, Rabby & more (EIP-6963) |
+| Wallets | MetaMask, Coinbase Wallet, Rabby & more (EIP-6963) + WalletConnect (Reown) |
 | Hosting | GitHub Pages (`/docs` folder) |
 
 ## 📄 License
