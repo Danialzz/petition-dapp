@@ -79,9 +79,6 @@
     .nav-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
     .nav-utils { display: flex; align-items: center; gap: 8px; }
     .nav-right .btn-primary { width: auto; margin-top: 0; white-space: nowrap; }
-
-    .nav-link-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 8px 13px; border-radius: 10px; font-family: var(--sans); height: 38px; display: flex; align-items: center; transition: color .15s, border-color .15s, background-color .15s; }
-    .nav-link-btn:hover { color: var(--text); border-color: var(--blue-border); background: var(--surface-3); }
     .theme-toggle { display: flex; align-items: center; justify-content: space-between; position: relative; width: 64px; height: 32px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; padding: 4px; flex-shrink: 0; transition: background-color .2s, border-color .2s, box-shadow .2s; }
     .theme-toggle:hover { border-color: var(--border-strong); box-shadow: inset 0 0 0 1px var(--blue-dim-strong); }
     .theme-toggle .ti { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; fill: none; pointer-events: none; transition: color .2s, opacity .2s; z-index: 1; }
@@ -133,15 +130,6 @@
     .btn-hero { width: auto; margin-top: 0; padding: 13px 24px; font-size: 14px; }
     .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--sans); text-decoration: none; display: inline-flex; align-items: center; transition: border-color .18s, color .18s, background-color .18s; }
     .btn-ghost:hover { border-color: var(--blue-border); color: var(--blue); background: var(--surface-2); }
-    .sig-line { display: block; margin: 0 auto 30px; width: 220px; height: 32px; opacity: .9; }
-    .sig-line path { fill: none; stroke: url(#sigGrad); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 340; stroke-dashoffset: 340; animation: sign-draw 1.4s cubic-bezier(0.65,0,0.35,1) 0.2s forwards; }
-    .sig-line .base-dot { fill: var(--blue); opacity: 0; animation: dot-in 0.3s ease 1.5s forwards; }
-    @keyframes sign-draw { to { stroke-dashoffset: 0; } }
-    @keyframes dot-in { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) {
-      .sig-line path { animation: none; stroke-dashoffset: 0; }
-      .sig-line .base-dot { animation: none; opacity: 1; }
-    }
     .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 auto; max-width: 700px; padding: 22px 26px; background: color-mix(in srgb, var(--surface) 78%, transparent); border: 1px solid var(--border); border-radius: 18px; backdrop-filter: blur(12px); box-shadow: var(--shadow-md); }
     .stat { text-align: center; position: relative; }
     .stat + .stat::before { content: ""; position: absolute; left: -6px; top: 12%; bottom: 12%; width: 1px; background: var(--border); }
@@ -208,7 +196,6 @@
     .profile-stat { flex: 1; text-align: center; padding: 0 4px; }
     .profile-stat-num { font-family: var(--display); font-size: 26px; font-weight: 700; color: var(--blue); letter-spacing: -0.5px; }
     .profile-stat-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; white-space: nowrap; }
-    .profile-section { margin-top: 8px; }
     .profile-section-title { font-family: var(--display); font-size: 15px; font-weight: 700; margin: 24px 0 12px; }
     @media (max-width: 480px) { .profile-header-top { flex-wrap: wrap; } }
 
@@ -235,7 +222,6 @@
     .lb-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 15px 17px; box-shadow: var(--shadow-sm); transition: border-color .18s, box-shadow .18s, transform .18s; }
     .lb-stat:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-2px); }
     .lb-stat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
-    .lb-stat-ico { font-size: 13px; line-height: 1; }
     .lb-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--subtle); }
     .lb-stat-num { font-family: var(--display); font-size: 25px; font-weight: 700; letter-spacing: -0.6px; line-height: 1; }
     @media (max-width: 720px) { .lb-stats { grid-template-columns: repeat(2, 1fr); } }
@@ -278,7 +264,6 @@
     .lb-tab { display: inline-flex; align-items: center; gap: 7px; background: none; border: 1px solid transparent; color: var(--muted); font-family: var(--sans); font-size: 12.5px; font-weight: 600; padding: 9px 14px; border-radius: 10px; white-space: nowrap; cursor: pointer; transition: color .15s, background-color .15s, border-color .15s; }
     .lb-tab:hover { color: var(--text); background: var(--surface-2); }
     .lb-tab.active { color: var(--blue); background: var(--blue-dim); border-color: var(--blue-border); }
-    .lb-tab-ico { font-size: 13px; line-height: 1; }
     .lb-list { padding: 8px 10px 12px; }
 
     /* ── Rows — every row shares an identical column grid: rank | avatar | content | value ── */
@@ -318,7 +303,6 @@
     .mini-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; transition: border-color .18s, box-shadow .18s, transform .18s; box-shadow: var(--shadow-sm); }
     .mini-stat-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
     .mini-stat-top { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
-    .mini-stat-ico { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, var(--blue-dim-strong), var(--violet-dim)); border: 1px solid var(--border-strong); font-size: 15px; }
     .mini-stat-label { font-size: 11px; font-weight: 700; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.8px; }
     .mini-stat-num { font-family: var(--display); font-size: 28px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
     .mini-stat-caption { font-size: 12px; color: var(--muted); margin-top: 4px; }
@@ -348,11 +332,6 @@
       .browse-side .chart-card { width: 100%; order: 5; }
       .browse-side .how-card { width: 100%; order: 6; }
     }
-    .tabs { display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-    .tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; border-radius: 9px; cursor: pointer; color: var(--muted); transition: all 0.15s; border: none; background: none; font-family: var(--sans); letter-spacing: 0.1px; }
-    .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
-    .tab:hover:not(.active) { color: var(--text); }
-
     /* ── Filter bar ── */
     .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
     .filter-bar input[type="text"] {
@@ -432,9 +411,8 @@
     /* ── Petition cards — signature "tally" edge ── */
     .petition-card { position: relative; display: flex; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px 20px 26px; margin-bottom: 12px; transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; overflow: hidden; cursor: pointer; box-shadow: var(--shadow-sm); }
     .petition-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .pc-icon { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--blue-dim-strong), var(--violet-dim)); border: 1px solid var(--border-strong); font-size: 22px; flex-shrink: 0; margin-top: 2px; }
     .pc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    @media (max-width: 480px) { .petition-card { gap: 12px; padding: 18px 16px 18px 20px; } .pc-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 12px; } }
+    @media (max-width: 480px) { .petition-card { gap: 12px; padding: 18px 16px 18px 20px; } }
 
     .cta-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, var(--blue-dim), transparent 60%); border: 1px solid var(--blue-border); border-radius: 18px; padding: 22px 26px; margin-bottom: 20px; flex-wrap: wrap; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
     .cta-banner::after { content: ""; position: absolute; right: -60px; top: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, var(--violet-dim), transparent 70%); pointer-events: none; }
@@ -549,7 +527,6 @@
     @media (max-width: 400px) {
       .network-badge { display: none !important; }
       .nav-brand-meta { display: none; } /* keep just the logo mark so the nav fits on very narrow screens */
-      .nav-link-btn { padding: 0 10px; font-size: 12px; }
       .wallet-pill { padding: 0 10px; font-size: 12px; }
     }
 
@@ -777,7 +754,6 @@
     .petition-card { gap: 0; padding: 20px 22px; border-radius: 12px; box-shadow: none; overflow: hidden; transition: border-color .18s, background-color .18s, box-shadow .18s; }
     .petition-card:hover { transform: none; border-color: var(--border-strong); box-shadow: var(--shadow-md); }
     .petition-card::before { content: none; }
-    .pc-icon { display: none; }
     .petition-header { margin-bottom: 8px; }
     .petition-title { font-size: 15.5px; letter-spacing: -.02em; }
     .petition-desc { font-size: 13.5px; line-height: 1.55; margin-bottom: 14px; }
@@ -1119,14 +1095,14 @@
     }
     @media (max-width: 390px) {
       nav { padding: 0 10px; }
-      .wallet-pill { max-width: 150px; padding: 0 10px; }
+      .nav-brand-meta { display: none; }
+      .wallet-pill { max-width: 140px; padding: 0 10px; }
       .nav-right .btn-primary { padding: 0 12px; }
       .hero h1 { font-size: clamp(32px, 10.5vw, 38px); }
       .stat-num { font-size: 21px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
-      .sig-line path { animation: none; }
     }
   </style>
 </head>

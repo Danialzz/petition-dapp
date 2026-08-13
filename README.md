@@ -181,7 +181,7 @@ The current Sepolia deployment stays live and untouched — you can switch back 
 ## 🕹️ How To Use
 
 ### Create a petition
-1. Open the app and connect your wallet (MetaMask, Coinbase Wallet, etc.)
+1. Open the app and connect your wallet (MetaMask, Coinbase Wallet, or any WalletConnect-compatible mobile wallet)
 2. Go to **Create** and set a title, description, category, deadline (days), and an optional signature goal
 3. Confirm the transaction on Base — your petition goes on-chain immediately
 
