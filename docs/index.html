@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>PetitionBase — Decentralized Petitions</title>
   <meta name="description" content="Create and sign petitions that live forever on Base. Fully on-chain, transparent, and censorship-resistant — no company owns your signature." />
 
@@ -943,6 +943,143 @@
       .footer-cta-card { display: block; padding: 22px 20px; }
       .footer-cta-card .btn-primary { width: 100%; margin-top: 18px; }
       .footer-inner { padding-inline: 20px; gap: 28px; }
+    }
+
+    /* ── Mobile polish (native feel on small screens) ── */
+    @media (max-width: 680px) {
+      html { -webkit-text-size-adjust: 100%; }
+      body { -webkit-tap-highlight-color: transparent; }
+      button, input, select, textarea { touch-action: manipulation; }
+
+      /* Nav — no overflow, larger tap targets */
+      nav { padding: 0 12px; }
+      .nav-logo { gap: 8px; font-size: 13px; }
+      .nav-logo .nav-dot { width: 22px; height: 22px; }
+      .nav-right { gap: 8px; }
+      .nav-utils { gap: 6px; }
+      .mobile-nav-toggle { width: 42px; height: 42px; }
+      .nav-right .btn-primary { height: 42px; padding: 0 15px; font-size: 12.5px; }
+      .wallet-pill { height: 42px; max-width: 160px; padding: 0 12px; font-size: 12px; }
+      #walletAddress { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .wallet-dropdown { min-width: 180px; }
+      .mobile-nav-menu { padding: 6px; }
+      .mobile-nav-menu button { min-height: 46px; font-size: 14px; }
+
+      /* Hero — stack CTAs, breathable spacing */
+      .hero { padding: 48px 16px 40px; }
+      .hero h1 { font-size: clamp(34px, 11.5vw, 46px); }
+      .hero .sub, .hero p { font-size: 15.5px; margin-bottom: 24px; }
+      .live-pill { margin-bottom: 20px; }
+      .hero-cta { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 28px; }
+      .hero-cta .btn-hero { width: 100%; min-height: 48px; }
+      .hero-stats { padding: 18px 14px; gap: 16px 8px; }
+      .stat { padding: 0 8px; }
+      .stat:first-child { padding-left: 8px; }
+      .stat-num { font-size: 23px; }
+
+      /* Section + browse */
+      .main { padding: 0 14px; }
+      .section-heading-row { margin-bottom: 18px; }
+      .section-heading { font-size: clamp(22px, 6.5vw, 26px); }
+      .cta-banner { padding: 18px 18px; }
+      .filter-card { padding: 16px 14px 4px; }
+      .filter-head { margin-bottom: 12px; }
+      .filter-bar { gap: 8px; margin-bottom: 16px; }
+      input[type="text"], input[type="number"], select { font-size: 16px; min-height: 44px; }
+      textarea { font-size: 16px; }
+
+      /* Petition cards */
+      .petition-card { padding: 18px 16px; margin-bottom: 12px; }
+      .petition-title { font-size: 16px; }
+      .petition-meta { margin-bottom: 14px; }
+      .badge { padding: 3px 8px; }
+      .petition-footer { gap: 8px; flex-direction: column; align-items: stretch; }
+      .footer-left { gap: 10px; justify-content: space-between; }
+      .petition-actions { width: 100%; justify-content: flex-end; }
+      .link-btn { min-height: 40px; display: inline-flex; align-items: center; font-size: 12.5px; }
+      .icon-btn { width: 40px; height: 40px; }
+      .icon-btn svg { width: 16px; height: 16px; }
+      .petition-actions { gap: 8px; }
+      .petition-actions .btn-sm, .detail-footer .btn-sm { height: 40px; padding: 0 16px; font-size: 13px; }
+      .btn-sign { min-width: 110px; }
+      .progress-row { gap: 10px; margin-bottom: 10px; }
+      .progress-label { font-size: 10px; }
+      .signer-chip { padding: 8px 11px; font-size: 11px; }
+
+      /* Modals — bottom sheet with safe area */
+      .modal-overlay { align-items: flex-end; }
+      .modal, .rules-modal .modal, .detail-modal { width: 100%; max-width: 100%; border-radius: 18px 18px 0 0; padding: 24px 18px max(24px, env(safe-area-inset-bottom)); max-height: 92vh; overscroll-behavior: contain; }
+      .create-modal { max-height: 90vh; }
+      .modal-close { top: 14px; right: 14px; width: 40px; height: 40px; }
+      .modal-actions { gap: 10px; }
+      .modal-actions .btn-primary, .modal-actions .btn-cancel { height: 46px; font-size: 14px; }
+      .goal-chip { padding: 12px 15px; font-size: 13px; }
+      .agree-row input[type="checkbox"] { width: 20px; height: 20px; }
+      .detail-meta-grid { gap: 12px; }
+      .detail-title { font-size: 20px; }
+      .rules-body { font-size: 13.5px; }
+
+      /* Profile */
+      .back-link { min-height: 40px; display: inline-flex; align-items: center; margin-bottom: 14px; }
+      .profile-header-top { gap: 12px; }
+      .profile-avatar { width: 58px; height: 58px; font-size: 15px; }
+      .profile-banner { height: 76px; }
+      .profile-display-name { font-size: 17px; }
+      .profile-links { gap: 8px; }
+      .profile-links .link-btn { min-height: 44px; font-size: 13px; }
+      .profile-stats { padding-top: 16px; }
+      .profile-right-header { flex-wrap: wrap; gap: 10px; }
+      .profile-right-header .btn-primary { height: 44px; }
+      .ptab { min-height: 40px; padding: 8px 13px; font-size: 13px; }
+      .petition-row { padding: 14px 12px; }
+      .profile-list-scroll { max-height: 320px; }
+
+      /* Leaderboard */
+      .lb-hero { padding: 4px 0 22px; }
+      .lb-hero h2 { font-size: clamp(30px, 9vw, 38px); }
+      .lb-stats { gap: 10px; margin-bottom: 16px; }
+      .lb-stat { padding: 14px 12px; }
+      .lb-stat-num { font-size: 22px; }
+      .lb-panel-head { padding: 14px 16px; gap: 10px; flex-wrap: wrap; }
+      .lb-panel-sub { font-size: 11px; }
+      .lb-panel-ico { width: 36px; height: 36px; }
+      .lb-tabs { padding: 8px 8px; }
+      .lb-tab { min-height: 40px; padding: 8px 13px; font-size: 12.5px; }
+      .lb-podium { padding: 20px 14px 14px; }
+      .lb-pod { padding: 18px 12px 14px; }
+      .lb-pod-1 { padding: 24px 12px 16px; }
+      .lb-row { grid-template-columns: 26px 30px minmax(0,1fr) auto; gap: 8px; padding: 12px 6px; }
+      .lb-rank { width: 26px; height: 26px; font-size: 11px; }
+      .lb-avatar { width: 30px; height: 30px; font-size: 13px; }
+      .lb-value b { font-size: 12.5px; }
+      .lb-empty { padding: 28px 16px; }
+
+      /* Footer */
+      .site-footer { margin-top: 72px; }
+      .footer-cta { padding: 32px 14px 0; }
+      .footer-cta-card { padding: 20px 18px; }
+      .footer-cta-copy { gap: 12px; }
+      .footer-cta-icon { flex: 0 0 38px; width: 38px; height: 38px; }
+      .footer-cta h2 { font-size: 19px; }
+      .footer-cta-card .btn-primary { min-height: 44px; }
+      .footer-inner { padding: 40px 18px 30px; gap: 26px; }
+      .footer-heading { margin-bottom: 12px; }
+      .footer-col a, .footer-col button { min-height: 40px; display: flex; align-items: center; margin-bottom: 4px; }
+      .footer-bottom { padding: 18px 18px max(20px, env(safe-area-inset-bottom)); gap: 8px; }
+
+      /* Toast */
+      #toast { bottom: max(20px, env(safe-area-inset-bottom)); width: calc(100% - 32px); max-width: 400px; }
+
+      /* Misc */
+      .loading-state { padding: 32px 16px; }
+      .empty { padding: 48px 16px; }
+    }
+    @media (max-width: 390px) {
+      nav { padding: 0 10px; }
+      .wallet-pill { max-width: 150px; padding: 0 10px; }
+      .nav-right .btn-primary { padding: 0 12px; }
+      .hero h1 { font-size: clamp(32px, 10.5vw, 38px); }
+      .stat-num { font-size: 21px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
