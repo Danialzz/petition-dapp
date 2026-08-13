@@ -906,6 +906,7 @@
     }
     @media (max-width: 900px) {
       .hero { padding-top: 64px; }
+      .browse-grid { grid-template-columns: 1fr; }
       .browse-side { display: grid; grid-template-columns: 1fr 1fr; }
       .side-stats-group { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
       .side-stats-group .mini-stat-card { display: block; }
@@ -934,6 +935,7 @@
       .filter-bar input[type="text"] { grid-column: auto; }
       .petition-card { padding: 18px 16px; }
       .petition-actions { justify-content: flex-start; }
+      .browse-grid { grid-template-columns: 1fr; }
       .browse-side { grid-template-columns: 1fr; }
       .side-stats-group { grid-template-columns: 1fr; }
       .side-stats-group .mini-stat-card { display: grid; }
@@ -981,12 +983,21 @@
       .main { padding: 0 14px; }
       .section-heading-row { margin-bottom: 18px; }
       .section-heading { font-size: clamp(22px, 6.5vw, 26px); }
-      .cta-banner { padding: 18px 18px; }
+      .cta-banner { padding: 18px 18px; flex-direction: column; align-items: stretch; }
+      .cta-banner .btn-primary { width: 100%; }
       .filter-card { padding: 16px 14px 4px; }
       .filter-head { margin-bottom: 12px; }
       .filter-bar { gap: 8px; margin-bottom: 16px; }
       input[type="text"], input[type="number"], select { font-size: 16px; min-height: 44px; }
       textarea { font-size: 16px; }
+
+      /* Guard against vertical/letter-by-letter text from squeezed flex/grid items */
+      .browse-main, .browse-side, .pc-body, .petition-title, .petition-desc,
+      .detail-title, .detail-desc, .cta-title, .cta-sub, .section-heading,
+      .lb-title, .lb-pod-title, .lb-sub, .row-title, .chart-label, .filter-head { min-width: 0; }
+      .petition-title, .petition-desc, .detail-title, .detail-desc, .cta-title, .cta-sub,
+      .section-heading, .lb-title, .lb-pod-title, .lb-sub, .row-title, .filter-title,
+      .mini-stat-label, .chart-title { overflow-wrap: break-word; word-break: normal; }
 
       /* Petition cards */
       .petition-card { padding: 18px 16px; margin-bottom: 12px; }
